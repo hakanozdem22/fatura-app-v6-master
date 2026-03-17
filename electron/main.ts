@@ -1,7 +1,13 @@
 import { app, BrowserWindow, Menu, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
+import log from 'electron-log';
 import * as path from 'path';
 import * as dotenv from 'dotenv';
+
+// Configure logging
+log.transports.file.level = "info";
+autoUpdater.logger = log;
+log.info('Uygulama başlatılıyor...');
 
 // Load .env in main process
 dotenv.config();

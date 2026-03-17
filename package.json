@@ -1,7 +1,7 @@
 {
   "name": "fatura-app",
   "private": true,
-  "version": "7.2.6",
+  "version": "7.2.8",
   "type": "module",
   "main": "dist-electron/main.js",
   "scripts": {
@@ -44,6 +44,7 @@
     "@supabase/supabase-js": "^2.97.0",
     "@types/uuid": "^10.0.0",
     "dotenv": "^17.3.1",
+    "electron-log": "^5.4.3",
     "electron-updater": "^6.8.3",
     "googleapis": "^171.4.0",
     "lucide-react": "^0.575.0",

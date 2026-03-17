@@ -38,7 +38,7 @@ export default function LoginScreen() {
             <div className="w-full max-w-md bg-surface-light dark:bg-surface-dark rounded-xl shadow-lg border border-border-light dark:border-border-dark p-8">
                 <div className="flex justify-center mb-6">
                     <div className="w-16 h-16 rounded-xl overflow-hidden flex items-center justify-center">
-                        <img src="/src/assets/logo.png" alt="Ardıç Elektrik Logo" className="w-full h-full object-contain" />
+                        <img src="/logo.png" alt="Ardıç Elektrik Logo" className="w-full h-full object-contain" />
                     </div>
                 </div>
 
