@@ -1,7 +1,7 @@
 {
   "name": "fatura-app",
   "private": true,
-  "version": "7.2.8",
+  "version": "7.2.9",
   "type": "module",
   "main": "dist-electron/main.js",
   "scripts": {

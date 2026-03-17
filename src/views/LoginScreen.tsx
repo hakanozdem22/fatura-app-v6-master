@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { Link, useNavigate } from 'react-router-dom';
 import { logAction } from '../lib/logger';
+import logo from '../assets/logo.png';
 
 export default function LoginScreen() {
     const navigate = useNavigate();
@@ -38,7 +39,7 @@ export default function LoginScreen() {
             <div className="w-full max-w-md bg-surface-light dark:bg-surface-dark rounded-xl shadow-lg border border-border-light dark:border-border-dark p-8">
                 <div className="flex justify-center mb-6">
                     <div className="w-16 h-16 rounded-xl overflow-hidden flex items-center justify-center">
-                        <img src="/logo.png" alt="Ardıç Elektrik Logo" className="w-full h-full object-contain" />
+                        <img src={logo} alt="Ardıç Elektrik Logo" className="w-full h-full object-contain" />
                     </div>
                 </div>
 

@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import logo from '../assets/logo.png';
 
 interface SidebarProps {
     isCollapsed?: boolean;
@@ -54,7 +55,7 @@ export default function Sidebar({ isCollapsed = false, toggleSidebar }: SidebarP
         <aside className={`hidden md:flex flex-col ${isCollapsed ? 'w-20' : 'w-64'} bg-surface-light dark:bg-surface-dark border-r border-border-light dark:border-border-dark h-screen fixed left-0 top-0 z-20 transition-all duration-300`}>
             <div className={`py-6 flex items-center ${isCollapsed ? 'justify-center px-4' : 'gap-3 px-6'} overflow-hidden`}>
                 <div className="w-8 h-8 rounded-lg overflow-hidden flex shrink-0 items-center justify-center" title={isCollapsed ? "Fatura Yöneticisi" : undefined}>
-                    <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
+                    <img src={logo} alt="Logo" className="w-full h-full object-contain" />
                 </div>
                 {!isCollapsed && (
                     <div className="min-w-0 flex-1">
