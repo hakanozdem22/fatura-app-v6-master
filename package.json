@@ -1,7 +1,7 @@
 {
   "name": "fatura-app",
   "private": true,
-  "version": "7.2.5",
+  "version": "7.2.6",
   "type": "module",
   "main": "dist-electron/main.js",
   "scripts": {
@@ -30,7 +30,7 @@
       }
     ],
     "win": {
-      "icon": "src/assets/logo.png"
+      "icon": "build/icon.png"
     },
     "nsis": {
       "oneClick": false,
