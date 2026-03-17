@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Manager Approval Workspace</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#135bec",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101622",
+                    },
+                    fontFamily: {
+                        "sans": ["Inter", "sans-serif"],
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        /* Custom scrollbar for the PDF viewer area */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 20px; }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 flex h-screen overflow-hidden">
+<!-- Sidebar -->
+<aside class="w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col justify-between shrink-0 z-20">
+<div class="flex flex-col h-full">
+<!-- Branding -->
+<div class="h-16 flex items-center px-6 border-b border-slate-100 dark:border-slate-800">
+<div class="flex items-center gap-2 text-primary">
+<span class="material-symbols-outlined text-3xl">verified_user</span>
+<div>
+<h1 class="text-base font-bold leading-none text-slate-900 dark:text-white">SecureInvoice</h1>
+<p class="text-xs text-slate-500 font-medium mt-0.5">Manager Workspace</p>
+</div>
+</div>
+</div>
+<!-- Navigation -->
+<nav class="flex-1 overflow-y-auto py-6 px-3 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-primary transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">dashboard</span>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary dark:text-primary" href="#">
+<span class="material-symbols-outlined fill-current">assignment</span>
+<span class="text-sm font-medium">Pending Approvals</span>
+<span class="ml-auto bg-primary text-white text-[10px] font-bold px-2 py-0.5 rounded-full">12</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-primary transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">history</span>
+<span class="text-sm font-medium">History</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-primary transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">folder_open</span>
+<span class="text-sm font-medium">Archived</span>
+</a>
+</nav>
+<!-- Bottom Actions -->
+<div class="p-3 border-t border-slate-100 dark:border-slate-800 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-primary transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">settings</span>
+<span class="text-sm font-medium">Settings</span>
+</a>
+<div class="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center gap-3 px-3 py-2">
+<div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 font-bold text-xs">
+                        JD
+                    </div>
+<div class="flex flex-col">
+<span class="text-sm font-medium text-slate-900 dark:text-white">Jane Doe</span>
+<span class="text-xs text-slate-500">Finance Lead</span>
+</div>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col h-full overflow-hidden relative">
+<!-- Header -->
+<header class="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-6 shrink-0 z-10">
+<div class="flex items-center gap-4">
+<h2 class="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Approvals Workspace</h2>
+<div class="hidden md:flex h-6 w-px bg-slate-200 dark:bg-slate-700 mx-2"></div>
+<div class="flex items-center gap-2 text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1 rounded-full border border-emerald-100 dark:border-emerald-900/50">
+<span class="material-symbols-outlined text-sm font-bold">lock</span>
+<span class="text-xs font-bold uppercase tracking-wide">MFA Secured</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<!-- Search -->
+<div class="relative group">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-slate-400 group-focus-within:text-primary transition-colors">search</span>
+</div>
+<input class="block w-64 pl-10 pr-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg leading-5 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-primary/50 focus:border-primary sm:text-sm transition-all" placeholder="Search invoice ID or supplier..." type="text"/>
+</div>
+<!-- Session Timer -->
+<div class="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-sm font-medium bg-slate-50 dark:bg-slate-800 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700" title="Session Timeout">
+<span class="material-symbols-outlined text-base">timer</span>
+<span>14:32</span>
+</div>
+<!-- Notifications -->
+<button class="relative p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
+</button>
+</div>
+</header>
+<!-- Split Screen Layout Container -->
+<div class="flex-1 flex overflow-hidden">
+<!-- Left Panel: Grid & Navigation (Collapsible or just narrow list in detail view) 
+                 Since the prompt asks for a "Split Screen View" when selected, we will simulate the "Selected State".
+                 Left side: Document Viewer. Right side: Data. 
+                 To keep navigation context, we'll put a narrow list of pending invoices on the far left.
+            -->
+<!-- Invoice List Sidebar (Context) -->
+<div class="w-80 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0 hidden xl:flex">
+<div class="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
+<h3 class="font-semibold text-sm text-slate-700 dark:text-slate-300">Pending Queue</h3>
+<div class="flex gap-1">
+<button class="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded"><span class="material-symbols-outlined text-sm">filter_list</span></button>
+<button class="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded"><span class="material-symbols-outlined text-sm">sort</span></button>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2">
+<!-- Active Item -->
+<div class="p-3 rounded-lg bg-primary/5 border border-primary/20 cursor-pointer shadow-sm relative group">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-l-lg"></div>
+<div class="flex justify-between items-start mb-1 pl-2">
+<span class="font-semibold text-slate-900 dark:text-white text-sm">TechData Solutions</span>
+<span class="text-xs font-mono text-slate-500">#INV-2024-001</span>
+</div>
+<div class="flex justify-between items-end pl-2">
+<div>
+<div class="text-xs text-slate-500">Due: Oct 23</div>
+<div class="mt-1 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200">
+                                    Urgent
+                                </div>
+</div>
+<span class="font-bold text-primary text-sm">$1,100.00</span>
+</div>
+</div>
+<!-- Inactive Items -->
+<div class="p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 cursor-pointer transition-all pl-4">
+<div class="flex justify-between items-start mb-1">
+<span class="font-medium text-slate-700 dark:text-slate-300 text-sm">Acme Corp</span>
+<span class="text-xs font-mono text-slate-400">#INV-2024-042</span>
+</div>
+<div class="flex justify-between items-end">
+<span class="text-xs text-slate-400">Due: Oct 24</span>
+<span class="font-semibold text-slate-600 dark:text-slate-400 text-sm">$4,500.00</span>
+</div>
+</div>
+<div class="p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 cursor-pointer transition-all pl-4">
+<div class="flex justify-between items-start mb-1">
+<span class="font-medium text-slate-700 dark:text-slate-300 text-sm">Globex Logistics</span>
+<span class="text-xs font-mono text-slate-400">#INV-2024-089</span>
+</div>
+<div class="flex justify-between items-end">
+<span class="text-xs text-slate-400">Due: Oct 25</span>
+<span class="font-semibold text-slate-600 dark:text-slate-400 text-sm">$1,200.50</span>
+</div>
+</div>
+<div class="p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 cursor-pointer transition-all pl-4">
+<div class="flex justify-between items-start mb-1">
+<span class="font-medium text-slate-700 dark:text-slate-300 text-sm">Soylent Corp</span>
+<span class="text-xs font-mono text-slate-400">#INV-2024-101</span>
+</div>
+<div class="flex justify-between items-end">
+<span class="text-xs text-slate-400">Due: Oct 26</span>
+<span class="font-semibold text-slate-600 dark:text-slate-400 text-sm">$3,450.00</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Central Workspace (Split View) -->
+<div class="flex-1 flex flex-col md:flex-row h-full overflow-hidden bg-slate-100 dark:bg-black/20">
+<!-- DOCUMENT VIEWER (Left/Top) -->
+<div class="flex-1 flex flex-col h-full md:h-full border-r border-slate-200 dark:border-slate-800 bg-slate-200/50 dark:bg-slate-900/50 relative">
+<!-- Viewer Toolbar -->
+<div class="h-12 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 shrink-0">
+<div class="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+<span class="material-symbols-outlined text-lg">description</span>
+<span class="text-sm font-medium">Original_Scan_v2.pdf</span>
+</div>
+<div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
+<button class="p-1 hover:bg-white dark:hover:bg-slate-700 rounded shadow-sm transition-colors text-slate-600 dark:text-slate-400" title="Zoom Out">
+<span class="material-symbols-outlined text-lg">remove</span>
+</button>
+<span class="text-xs font-medium w-12 text-center text-slate-600 dark:text-slate-400">100%</span>
+<button class="p-1 hover:bg-white dark:hover:bg-slate-700 rounded shadow-sm transition-colors text-slate-600 dark:text-slate-400" title="Zoom In">
+<span class="material-symbols-outlined text-lg">add</span>
+</button>
+<div class="w-px h-4 bg-slate-300 dark:bg-slate-600 mx-1"></div>
+<button class="p-1 hover:bg-white dark:hover:bg-slate-700 rounded shadow-sm transition-colors text-slate-600 dark:text-slate-400" title="Rotate">
+<span class="material-symbols-outlined text-lg">rotate_right</span>
+</button>
+<button class="p-1 hover:bg-white dark:hover:bg-slate-700 rounded shadow-sm transition-colors text-slate-600 dark:text-slate-400" title="Download">
+<span class="material-symbols-outlined text-lg">download</span>
+</button>
+</div>
+</div>
+<!-- Viewer Content -->
+<div class="flex-1 overflow-auto custom-scrollbar p-8 flex justify-center items-start">
+<div class="bg-white shadow-xl min-h-[800px] w-full max-w-[600px] relative transition-transform origin-top">
+<!-- Placeholder Invoice Image -->
+<div class="w-full h-full p-8 flex flex-col gap-6" data-alt="Scanned invoice document showing header, line items, and totals for TechData Solutions">
+<div class="flex justify-between items-start border-b pb-4 border-slate-100">
+<div class="w-32 h-10 bg-slate-200 rounded"></div> <!-- Logo placeholder -->
+<div class="text-right">
+<div class="text-2xl font-bold text-slate-800">INVOICE</div>
+<div class="text-sm text-slate-500">#INV-2024-001</div>
+</div>
+</div>
+<div class="flex justify-between gap-8">
+<div class="space-y-2 w-1/2">
+<div class="text-xs font-bold text-slate-400 uppercase">Bill To</div>
+<div class="text-sm text-slate-700">Secure Corp Inc.<br/>123 Security Blvd.<br/>Cyber City, CA 90210</div>
+</div>
+<div class="space-y-2 w-1/2">
+<div class="text-xs font-bold text-slate-400 uppercase">Ship To</div>
+<div class="text-sm text-slate-700">TechData Solutions<br/>45 Data Drive<br/>Silicon Valley, CA 94000</div>
+</div>
+</div>
+<div class="mt-4">
+<div class="w-full h-8 bg-slate-100 mb-2 rounded-sm"></div>
+<div class="space-y-2">
+<div class="flex justify-between"><div class="w-1/2 h-4 bg-slate-50 rounded"></div><div class="w-16 h-4 bg-slate-50 rounded"></div></div>
+<div class="flex justify-between"><div class="w-1/2 h-4 bg-slate-50 rounded"></div><div class="w-16 h-4 bg-slate-50 rounded"></div></div>
+<div class="flex justify-between"><div class="w-1/2 h-4 bg-slate-50 rounded"></div><div class="w-16 h-4 bg-slate-50 rounded"></div></div>
+</div>
+</div>
+<div class="mt-auto border-t pt-4 border-slate-100 flex justify-end">
+<div class="w-48 space-y-2">
+<div class="flex justify-between text-sm"><span class="text-slate-500">Subtotal:</span> <span class="font-mono text-slate-800">$1,000.00</span></div>
+<div class="flex justify-between text-sm"><span class="text-slate-500">Tax (10%):</span> <span class="font-mono text-slate-800">$100.00</span></div>
+<div class="flex justify-between text-lg font-bold border-t border-slate-200 pt-2"><span class="text-slate-900">Total:</span> <span class="font-mono text-slate-900">$1,100.00</span></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- METADATA & ACTIONS (Right/Bottom) -->
+<div class="w-full md:w-[400px] lg:w-[450px] bg-white dark:bg-slate-900 flex flex-col h-full shrink-0 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] z-10">
+<!-- Form Header -->
+<div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
+<div>
+<h3 class="text-base font-bold text-slate-900 dark:text-white">Invoice Details</h3>
+<p class="text-xs text-slate-500">Verify extracted data against the scan.</p>
+</div>
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">
+                            Confidence: 98%
+                        </span>
+</div>
+<!-- Scrollable Form Area -->
+<div class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
+<!-- Section 1: Vendor Info -->
+<div class="space-y-4">
+<h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Vendor Information</h4>
+<div>
+<label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Supplier Name</label>
+<div class="relative">
+<input class="block w-full rounded-md border-slate-300 dark:border-slate-700 shadow-sm focus:border-primary focus:ring-primary dark:bg-slate-800 dark:text-white sm:text-sm pl-9" readonly="" type="text" value="TechData Solutions"/>
+<span class="material-symbols-outlined absolute left-2.5 top-2 text-slate-400 text-lg">store</span>
+<span class="material-symbols-outlined absolute right-2.5 top-2 text-green-500 text-lg" title="Verified">check_circle</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div>
+<label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Invoice Date</label>
+<div class="relative">
+<input class="block w-full rounded-md border-slate-300 dark:border-slate-700 shadow-sm focus:border-primary focus:ring-primary dark:bg-slate-800 dark:text-white sm:text-sm pl-9" readonly="" type="date" value="2023-10-23"/>
+<span class="material-symbols-outlined absolute left-2.5 top-2 text-slate-400 text-lg">calendar_today</span>
+</div>
+</div>
+<div>
+<label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Due Date</label>
+<div class="relative">
+<input class="block w-full rounded-md border-slate-300 dark:border-slate-700 shadow-sm focus:border-primary focus:ring-primary dark:bg-slate-800 dark:text-white sm:text-sm pl-9" readonly="" type="date" value="2023-11-23"/>
+<span class="material-symbols-outlined absolute left-2.5 top-2 text-slate-400 text-lg">event</span>
+</div>
+</div>
+</div>
+</div>
+<div class="h-px bg-slate-200 dark:bg-slate-800"></div>
+<!-- Section 2: Financials (Editable) -->
+<div class="space-y-4">
+<h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+                                Financials
+                                <span class="bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded border border-primary/20">Editable</span>
+</h4>
+<div class="grid grid-cols-2 gap-4">
+<div>
+<label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Subtotal</label>
+<div class="relative">
+<span class="absolute left-3 top-2 text-slate-500 text-sm">$</span>
+<input class="block w-full rounded-md border-slate-300 dark:border-slate-700 shadow-sm focus:border-primary focus:ring-primary dark:bg-slate-800 dark:text-white sm:text-sm pl-7 text-right font-mono" type="text" value="1,000.00"/>
+</div>
+</div>
+<div>
+<label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Tax Amount</label>
+<div class="relative">
+<span class="absolute left-3 top-2 text-slate-500 text-sm">$</span>
+<input class="block w-full rounded-md border-slate-300 dark:border-slate-700 shadow-sm focus:border-primary focus:ring-primary dark:bg-slate-800 dark:text-white sm:text-sm pl-7 text-right font-mono" type="text" value="100.00"/>
+</div>
+</div>
+</div>
+<div class="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+<label class="block text-sm font-bold text-slate-900 dark:text-white mb-1">Total Amount</label>
+<div class="relative">
+<span class="absolute left-3 top-2.5 text-slate-900 dark:text-white text-lg font-bold">$</span>
+<input class="block w-full rounded-md border-slate-300 dark:border-slate-600 shadow-sm focus:border-primary focus:ring-primary dark:bg-slate-900 dark:text-white text-lg font-bold pl-7 text-right font-mono text-primary" type="text" value="1,100.00"/>
+</div>
+</div>
+</div>
+<div class="h-px bg-slate-200 dark:bg-slate-800"></div>
+<!-- Section 3: Notes -->
+<div>
+<label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Internal Notes / Rejection Reason</label>
+<textarea class="block w-full rounded-md border-slate-300 dark:border-slate-700 shadow-sm focus:border-primary focus:ring-primary dark:bg-slate-800 dark:text-white sm:text-sm" placeholder="Add a comment..." rows="3"></textarea>
+</div>
+<!-- Audit Trail Small Preview -->
+<div class="bg-blue-50 dark:bg-blue-900/10 p-3 rounded-md border border-blue-100 dark:border-blue-900/30">
+<div class="flex items-start gap-2">
+<span class="material-symbols-outlined text-blue-500 text-sm mt-0.5">info</span>
+<p class="text-xs text-blue-700 dark:text-blue-300">
+                                    OCR Scan performed by <strong>System</strong> on Oct 24, 08:30 AM.
+                                </p>
+</div>
+</div>
+</div>
+<!-- Footer Actions -->
+<div class="p-6 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-3 z-20">
+<div class="grid grid-cols-2 gap-3">
+<button class="flex items-center justify-center gap-2 px-4 py-3 border border-red-200 dark:border-red-900/50 rounded-lg shadow-sm text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-300 dark:hover:bg-red-900/40 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all group">
+<span class="material-symbols-outlined">close</span>
+                                Reject <span class="hidden sm:inline text-xs opacity-50 ml-1 font-normal">(R)</span>
+</button>
+<button class="flex items-center justify-center gap-2 px-4 py-3 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all group">
+<span class="material-symbols-outlined">check</span>
+                                Approve <span class="hidden sm:inline text-xs opacity-50 ml-1 font-normal">(A)</span>
+</button>
+</div>
+<div class="flex justify-center">
+<button class="text-xs text-slate-400 hover:text-primary underline flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">flag</span> Report Issue with OCR
+                            </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

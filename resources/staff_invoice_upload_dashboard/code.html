@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Staff Invoice Upload Dashboard</title>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#135bec",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101622",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display antialiased">
+<div class="relative flex h-screen w-full overflow-hidden bg-background-light dark:bg-background-dark">
+<!-- Sidebar -->
+<aside class="flex w-72 flex-col border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+<div class="flex h-full flex-col justify-between p-4">
+<div class="flex flex-col gap-6">
+<!-- User Profile -->
+<div class="flex items-center gap-3 px-2 py-2">
+<div class="h-10 w-10 overflow-hidden rounded-full bg-slate-200" data-alt="Staff profile picture placeholder">
+<img alt="Profile" class="h-full w-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDEFnwzD2XYST05q2L6OqdIHlHxsGToJ985UVa3YHj8ghq5WpTEMTtiaFwSjWA4zKAN6E-2jyf0dJ_mLkvCVC36yX6cWxCSFK_wRhh6GZHJ20E10HsBgfhv-EeoB9jBSaMNvdx1CC4RF_iXELI9NOAysPDkDpwqKFtOL5Tjy6dIe0NyxnOXkeaOz_sR1qHy-Hs2klrxDZIfq8s9tmlYSuck89UKl7C7bQyuPY06wHJAt2cEcjlofg-rQepz9Gi9qcs8YWZQgF-CRW2a"/>
+</div>
+<div class="flex flex-col">
+<h1 class="text-sm font-semibold text-slate-900 dark:text-white">Jane Doe</h1>
+<p class="text-xs text-slate-500 dark:text-slate-400">Staff Member</p>
+</div>
+</div>
+<!-- Navigation -->
+<nav class="flex flex-col gap-1">
+<a class="group flex items-center gap-3 rounded-lg bg-primary/10 px-3 py-2 text-primary" href="#">
+<span class="material-symbols-outlined filled">dashboard</span>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<a class="group flex items-center gap-3 rounded-lg px-3 py-2 text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800" href="#">
+<span class="material-symbols-outlined">cloud_upload</span>
+<span class="text-sm font-medium">My Uploads</span>
+</a>
+<a class="group flex items-center gap-3 rounded-lg px-3 py-2 text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800" href="#">
+<div class="relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500"></span>
+</div>
+<span class="text-sm font-medium">Notifications</span>
+</a>
+<a class="group flex items-center gap-3 rounded-lg px-3 py-2 text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-sm font-medium">Settings</span>
+</a>
+</nav>
+</div>
+<!-- Footer / Quick Action -->
+<div class="flex flex-col gap-4">
+<div class="rounded-lg bg-slate-50 dark:bg-slate-800 p-4 border border-slate-100 dark:border-slate-700">
+<div class="flex items-center gap-2 mb-2 text-primary">
+<span class="material-symbols-outlined text-sm">security</span>
+<span class="text-xs font-bold uppercase tracking-wider">Secure Connection</span>
+</div>
+<p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                            Your session is encrypted. All uploads are scanned for malware automatically.
+                        </p>
+</div>
+<button class="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
+<span class="material-symbols-outlined text-[18px]">logout</span>
+<span>Sign Out</span>
+</button>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 overflow-y-auto">
+<div class="mx-auto flex w-full max-w-6xl flex-col gap-8 p-8">
+<!-- Header -->
+<header class="flex flex-col gap-1">
+<h2 class="text-3xl font-bold text-slate-900 dark:text-white">Invoice Dashboard</h2>
+<p class="text-slate-500 dark:text-slate-400">Manage and track your recent invoice submissions for approval.</p>
+</header>
+<!-- Stats Overview (Optional but good for dashboards) -->
+<div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+<div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+<div class="flex items-center gap-3">
+<div class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
+<span class="material-symbols-outlined">pending_actions</span>
+</div>
+<div>
+<p class="text-sm font-medium text-slate-500 dark:text-slate-400">Pending Review</p>
+<p class="text-xl font-bold text-slate-900 dark:text-white">3</p>
+</div>
+</div>
+</div>
+<div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+<div class="flex items-center gap-3">
+<div class="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400">
+<span class="material-symbols-outlined">check_circle</span>
+</div>
+<div>
+<p class="text-sm font-medium text-slate-500 dark:text-slate-400">Approved This Month</p>
+<p class="text-xl font-bold text-slate-900 dark:text-white">12</p>
+</div>
+</div>
+</div>
+<div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+<div class="flex items-center gap-3">
+<div class="flex h-10 w-10 items-center justify-center rounded-lg bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400">
+<span class="material-symbols-outlined">cancel</span>
+</div>
+<div>
+<p class="text-sm font-medium text-slate-500 dark:text-slate-400">Rejected</p>
+<p class="text-xl font-bold text-slate-900 dark:text-white">1</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Upload Section -->
+<div class="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+<div class="border-b border-slate-100 p-6 dark:border-slate-800">
+<h3 class="text-lg font-bold text-slate-900 dark:text-white">Upload New Invoice</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400">Securely transmit your documents to the finance team.</p>
+</div>
+<div class="p-6">
+<div class="group relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 py-12 text-center hover:border-primary hover:bg-primary/5 dark:border-slate-700 dark:bg-slate-800/50 dark:hover:border-primary dark:hover:bg-primary/10 transition-colors cursor-pointer">
+<div class="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white text-primary shadow-sm dark:bg-slate-800">
+<span class="material-symbols-outlined text-3xl">cloud_upload</span>
+</div>
+<p class="text-lg font-medium text-slate-900 dark:text-white">
+                                Drag and drop your invoice PDF here
+                            </p>
+<p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                                or <span class="font-medium text-primary hover:underline">browse files</span> from your computer
+                            </p>
+<p class="mt-4 text-xs text-slate-400 dark:text-slate-500">
+                                Supports PDF, JPG, PNG up to 10MB
+                            </p>
+</div>
+<!-- Upload Features -->
+<div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+<div class="flex items-center gap-3 rounded-lg border border-slate-100 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-800/50">
+<span class="material-symbols-outlined text-slate-400">lock</span>
+<div>
+<p class="text-sm font-medium text-slate-900 dark:text-white">Secure Transfer</p>
+<p class="text-xs text-slate-500">256-bit encryption</p>
+</div>
+</div>
+<div class="flex items-center gap-3 rounded-lg border border-slate-100 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-800/50">
+<span class="material-symbols-outlined text-slate-400">document_scanner</span>
+<div>
+<p class="text-sm font-medium text-slate-900 dark:text-white">OCR Scanning</p>
+<p class="text-xs text-slate-500">Auto-extracts data</p>
+</div>
+</div>
+<div class="flex items-center gap-3 rounded-lg border border-slate-100 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-800/50">
+<span class="material-symbols-outlined text-slate-400">mail</span>
+<div>
+<p class="text-sm font-medium text-slate-900 dark:text-white">Email Receipt</p>
+<p class="text-xs text-slate-500">Instant confirmation</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Recent Uploads Table -->
+<div class="flex flex-col gap-4">
+<h3 class="text-xl font-bold text-slate-900 dark:text-white">Recent Uploads</h3>
+<div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+<div class="overflow-x-auto">
+<table class="w-full min-w-[600px] text-left text-sm">
+<thead class="border-b border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-800/50">
+<tr>
+<th class="px-6 py-4 font-semibold text-slate-900 dark:text-white">Invoice ID</th>
+<th class="px-6 py-4 font-semibold text-slate-900 dark:text-white">Date Submitted</th>
+<th class="px-6 py-4 font-semibold text-slate-900 dark:text-white">Amount</th>
+<th class="px-6 py-4 font-semibold text-slate-900 dark:text-white">Status</th>
+<th class="px-6 py-4 text-right font-semibold text-slate-900 dark:text-white">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+<!-- Row 1 -->
+<tr class="group hover:bg-slate-50 dark:hover:bg-slate-800/50">
+<td class="px-6 py-4 font-medium text-slate-900 dark:text-white">INV-2023-001</td>
+<td class="px-6 py-4 text-slate-500 dark:text-slate-400">Oct 24, 2023</td>
+<td class="px-6 py-4 font-medium text-slate-900 dark:text-white">$1,200.00</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+                                                Pending
+                                            </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-slate-400 hover:text-primary dark:hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">visibility</span>
+</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="group hover:bg-slate-50 dark:hover:bg-slate-800/50">
+<td class="px-6 py-4 font-medium text-slate-900 dark:text-white">INV-2023-002</td>
+<td class="px-6 py-4 text-slate-500 dark:text-slate-400">Oct 22, 2023</td>
+<td class="px-6 py-4 font-medium text-slate-900 dark:text-white">$350.50</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">
+                                                Approved
+                                            </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-slate-400 hover:text-primary dark:hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">download</span>
+</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="group hover:bg-slate-50 dark:hover:bg-slate-800/50">
+<td class="px-6 py-4 font-medium text-slate-900 dark:text-white">INV-2023-003</td>
+<td class="px-6 py-4 text-slate-500 dark:text-slate-400">Oct 20, 2023</td>
+<td class="px-6 py-4 font-medium text-slate-900 dark:text-white">$4,500.00</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800 dark:bg-red-900/30 dark:text-red-400">
+                                                Rejected
+                                            </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-slate-400 hover:text-primary dark:hover:text-primary transition-colors" title="View Reason">
+<span class="material-symbols-outlined text-[20px]">info</span>
+</button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="group hover:bg-slate-50 dark:hover:bg-slate-800/50">
+<td class="px-6 py-4 font-medium text-slate-900 dark:text-white">INV-2023-004</td>
+<td class="px-6 py-4 text-slate-500 dark:text-slate-400">Oct 18, 2023</td>
+<td class="px-6 py-4 font-medium text-slate-900 dark:text-white">$125.00</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">
+                                                Approved
+                                            </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-slate-400 hover:text-primary dark:hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">download</span>
+</button>
+</td>
+</tr>
+<!-- Row 5 -->
+<tr class="group hover:bg-slate-50 dark:hover:bg-slate-800/50">
+<td class="px-6 py-4 font-medium text-slate-900 dark:text-white">INV-2023-005</td>
+<td class="px-6 py-4 text-slate-500 dark:text-slate-400">Oct 15, 2023</td>
+<td class="px-6 py-4 font-medium text-slate-900 dark:text-white">$2,100.00</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">
+                                                Approved
+                                            </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-slate-400 hover:text-primary dark:hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">download</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-6 py-3 dark:border-slate-800 dark:bg-slate-900">
+<p class="text-sm text-slate-500 dark:text-slate-400">Showing <span class="font-medium text-slate-900 dark:text-white">1</span> to <span class="font-medium text-slate-900 dark:text-white">5</span> of <span class="font-medium text-slate-900 dark:text-white">24</span> results</p>
+<div class="flex gap-2">
+<button class="rounded border border-slate-300 bg-white px-3 py-1 text-sm text-slate-500 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700" disabled="">Previous</button>
+<button class="rounded border border-slate-300 bg-white px-3 py-1 text-sm text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700">Next</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

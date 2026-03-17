@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Account Locked - Security System</title>
+<!-- Load Inter Font -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS v3 with Plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration based on Theme8 -->
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#135bec',
+            security: {
+              dark: '#0f172a', // Slate 900
+              card: '#1e293b', // Slate 800
+              border: '#334155', // Slate 700
+              danger: '#ef4444' // Red 500
+            }
+          },
+          borderRadius: {
+            'custom': '8px' // ROUND_EIGHT
+          },
+          fontFamily: {
+            sans: ['Inter', 'ui-sans-serif', 'system-ui'],
+          },
+        }
+      }
+    }
+  </script>
+<style data-purpose="global-layout">
+    body {
+      background-color: #0f172a; /* Fallback for dark mode */
+      color: #f1f5f9;
+      -webkit-font-smoothing: antialiased;
+    }
+    .security-gradient {
+      background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+    }
+    .glow-effect {
+      box-shadow: 0 0 20px rgba(239, 68, 68, 0.1);
+    }
+  </style>
+</head>
+<body class="font-sans security-gradient min-h-screen flex items-center justify-center p-4">
+<!-- BEGIN: LockoutInterface -->
+<main class="max-w-md w-full bg-security-card border border-security-border rounded-custom shadow-2xl p-8 text-center glow-effect" data-purpose="account-lockout-container" id="lockout-screen">
+<!-- BEGIN: SecurityIcon -->
+<div class="mb-6 flex justify-center">
+<div class="p-4 bg-red-500/10 rounded-full border border-red-500/20">
+<!-- SVG Red Padlock -->
+<svg class="w-16 h-16 text-security-danger" fill="none" stroke="currentColor" stroke-width="1.5" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</div>
+</div>
+<!-- END: SecurityIcon -->
+<!-- BEGIN: WarningContent -->
+<section data-purpose="warning-message">
+<h1 class="text-2xl font-bold text-white mb-2 tracking-tight">
+        Account Temporarily Locked
+      </h1>
+<p class="text-slate-400 text-sm leading-relaxed mb-6">
+        Due to multiple failed login attempts and suspicious activity, your access has been restricted to protect your sensitive data.
+      </p>
+<!-- Lock Duration Alert -->
+<div class="bg-slate-900/50 border border-security-border rounded-custom p-4 mb-8">
+<span class="block text-xs uppercase tracking-widest text-slate-500 font-semibold mb-1">Lock Duration Remaining</span>
+<span class="text-3xl font-mono font-bold text-red-400" id="countdown">29:59</span>
+</div>
+</section>
+<!-- END: WarningContent -->
+<!-- BEGIN: ActionButtons -->
+<section class="space-y-3" data-purpose="recovery-actions">
+<button class="w-full bg-primary hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-custom transition-all duration-200 shadow-lg shadow-primary/20" type="button">
+        Initiate Secure Recovery
+      </button>
+<button class="w-full bg-transparent hover:bg-slate-700/50 border border-security-border text-slate-300 font-medium py-3 px-4 rounded-custom transition-all duration-200" type="button">
+        Contact System Administrator
+      </button>
+</section>
+<!-- END: ActionButtons -->
+<!-- BEGIN: FooterAudit -->
+<footer class="mt-10 pt-6 border-t border-security-border/50" data-purpose="audit-information">
+<div class="flex items-center justify-between text-[10px] text-slate-500 font-mono uppercase tracking-wider">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+          Event Recorded
+        </div>
+<div>
+          Ref: <span class="text-slate-400">ERR_AUTH_LOCKED_8824X</span>
+</div>
+</div>
+<p class="mt-4 text-[10px] text-slate-600 italic">
+        IP Address: 192.168.1.104 | Timestamp: 2023-10-27 14:42:01 UTC
+      </p>
+</footer>
+<!-- END: FooterAudit -->
+</main>
+<!-- END: LockoutInterface -->
+<script data-purpose="countdown-timer">
+    // Simple timer simulation for visual effect
+    let seconds = 1799; // 29:59
+    const display = document.getElementById('countdown');
+    
+    const timer = setInterval(() => {
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      display.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+      if (seconds <= 0) clearInterval(timer);
+      seconds--;
+    }, 1000);
+  </script>
+</body></html>

@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>System Audit Logs Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+            extend: {
+                colors: {
+                "primary": "#135bec",
+                "background-light": "#f6f6f8",
+                "background-dark": "#101622",
+                },
+                fontFamily: {
+                "display": ["Inter", "sans-serif"]
+                },
+                borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+            },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        @layer utilities {
+            .group:hover .tooltip {
+                visibility: visible;
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display min-h-screen flex">
+<div class="relative flex h-auto min-h-screen w-64 flex-col bg-white border-r border-slate-200 dark:bg-background-dark dark:border-slate-800">
+<div class="flex flex-col h-full p-4">
+<div class="flex gap-3 mb-8">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" data-alt="User Avatar Abstract Gradient" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDojdiThQdmIwa3gw8-kbRqnBZoh5zfLEkD5a2F9SlD-5gor5CdSYn-G5ZR_Y9Kwd5TkCoKcL6VQTd9WIC_ddl6-JBKJ8hIHLaNld8M4hlxHBZI0xqcXyCFN1kbgcWFbUpznZL0zytlao1OJrZUQRUll47Ue3wuINAsCGTXoS5S2W4P5sNo3TacdLjstOxd527jW4vMd2rlKjeVF_5v9JLGoMeT62jJEKb__bnsh77Wty6imdgitzc-1Y1tOAbhAtlP8pxd65g6un1_");'></div>
+<div class="flex flex-col">
+<h1 class="text-slate-900 dark:text-white text-base font-medium leading-normal">Admin Manager</h1>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-normal leading-normal">Super Admin</p>
+</div>
+</div>
+<div class="flex flex-col gap-2 flex-1">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group" href="#">
+<span class="material-symbols-outlined text-slate-500 group-hover:text-primary transition-colors">dashboard</span>
+<p class="text-sm font-medium leading-normal">Dashboard</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group" href="#">
+<span class="material-symbols-outlined text-slate-500 group-hover:text-primary transition-colors">description</span>
+<p class="text-sm font-medium leading-normal">Invoices</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group" href="#">
+<span class="material-symbols-outlined text-slate-500 group-hover:text-primary transition-colors">group</span>
+<p class="text-sm font-medium leading-normal">Vendors</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group" href="#">
+<span class="material-symbols-outlined text-slate-500 group-hover:text-primary transition-colors">settings</span>
+<p class="text-sm font-medium leading-normal">Settings</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/10 text-primary dark:text-primary dark:bg-primary/20" href="#">
+<span class="material-symbols-outlined text-primary fill-current">verified_user</span>
+<p class="text-sm font-medium leading-normal">Audit Logs</p>
+</a>
+</div>
+<button class="flex w-full cursor-pointer items-center justify-center rounded-lg h-10 px-4 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm font-bold mt-auto transition-colors">
+<span class="material-symbols-outlined mr-2 text-lg">logout</span>
+<span class="truncate">Logout</span>
+</button>
+</div>
+</div>
+<main class="flex-1 flex flex-col h-screen overflow-hidden">
+<header class="bg-white dark:bg-background-dark border-b border-slate-200 dark:border-slate-800 px-8 py-6">
+<div class="max-w-[1400px] mx-auto w-full">
+<nav class="flex mb-4 text-xs font-medium text-slate-500 dark:text-slate-400">
+<a class="hover:text-primary" href="#">Home</a>
+<span class="mx-2">/</span>
+<a class="hover:text-primary" href="#">Settings</a>
+<span class="mx-2">/</span>
+<span class="text-slate-800 dark:text-slate-200">System Audit Logs</span>
+</nav>
+<div class="flex flex-wrap items-end justify-between gap-4">
+<div class="flex flex-col gap-1">
+<h1 class="text-slate-900 dark:text-white text-3xl font-bold leading-tight flex items-center gap-3">
+                        System Audit Logs
+                        <span class="inline-flex items-center rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
+<span class="material-symbols-outlined text-[14px] mr-1">lock</span> Encrypted
+                        </span>
+</h1>
+<p class="text-slate-500 dark:text-slate-400 text-base">Detailed chronological record of all system activities and security events.</p>
+</div>
+<div class="flex gap-2">
+<button class="flex items-center justify-center rounded-lg h-10 px-4 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-semibold transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[20px] mr-2">download</span>
+                        Export CSV
+                    </button>
+<button class="flex items-center justify-center rounded-lg h-10 px-4 bg-primary hover:bg-blue-600 text-white text-sm font-semibold transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[20px] mr-2">picture_as_pdf</span>
+                        Export PDF
+                    </button>
+</div>
+</div>
+</div>
+</header>
+<div class="flex-1 overflow-auto p-8 bg-background-light dark:bg-background-dark">
+<div class="max-w-[1400px] mx-auto w-full flex flex-col gap-6">
+<div class="bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-800 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+<div class="flex items-center gap-4 w-full sm:w-auto">
+<div class="bg-emerald-100 dark:bg-emerald-900/30 p-2 rounded-full">
+<span class="material-symbols-outlined text-emerald-600 dark:text-emerald-400">verified</span>
+</div>
+<div class="flex flex-col">
+<h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                           Database Integrity: 100% Secured
+                           <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+</h3>
+<p class="text-xs text-slate-500 dark:text-slate-400">Last full checksum validation completed 2 mins ago.</p>
+</div>
+</div>
+<div class="flex items-center gap-4 w-full sm:w-auto flex-1 justify-end">
+<div class="hidden md:flex flex-col w-full max-w-xs gap-1">
+<div class="flex justify-between text-[10px] font-medium text-slate-500 uppercase tracking-wider">
+<span>Scanning Records</span>
+<span>100%</span>
+</div>
+<div class="h-1.5 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+<div class="h-full bg-emerald-500 w-full rounded-full"></div>
+</div>
+</div>
+<button class="flex items-center justify-center whitespace-nowrap rounded-lg h-9 px-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold transition-colors shadow-sm gap-2">
+<span class="material-symbols-outlined text-[18px]">gpp_good</span>
+                        Validate All Logs
+                    </button>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-wrap gap-4 items-center justify-between">
+<div class="flex flex-wrap gap-3 items-center flex-1">
+<div class="relative w-full max-w-xs">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-slate-400">search</span>
+</div>
+<input class="block w-full rounded-lg border-0 py-2 pl-10 pr-3 text-slate-900 ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6 dark:bg-slate-900 dark:ring-slate-700 dark:text-white" placeholder="Search by ID, User, or IP..." type="text"/>
+</div>
+<button class="flex h-9 items-center gap-2 rounded-lg bg-slate-50 px-3 py-1 text-sm font-medium text-slate-700 ring-1 ring-inset ring-slate-200 hover:bg-slate-100 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-700">
+<span class="material-symbols-outlined text-[18px] text-slate-500">calendar_today</span>
+                        Oct 1 - Oct 31, 2023
+                        <span class="material-symbols-outlined text-[18px] text-slate-400">expand_more</span>
+</button>
+<button class="flex h-9 items-center gap-2 rounded-lg bg-slate-50 px-3 py-1 text-sm font-medium text-slate-700 ring-1 ring-inset ring-slate-200 hover:bg-slate-100 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-700">
+<span class="material-symbols-outlined text-[18px] text-slate-500">filter_list</span>
+                        Action: All
+                        <span class="material-symbols-outlined text-[18px] text-slate-400">expand_more</span>
+</button>
+<button class="flex h-9 items-center gap-2 rounded-lg bg-slate-50 px-3 py-1 text-sm font-medium text-slate-700 ring-1 ring-inset ring-slate-200 hover:bg-slate-100 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-700">
+<span class="material-symbols-outlined text-[18px] text-slate-500">person</span>
+                        User: All
+                        <span class="material-symbols-outlined text-[18px] text-slate-400">expand_more</span>
+</button>
+<a class="text-sm text-primary hover:text-blue-700 font-medium ml-2" href="#">Clear all</a>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col">
+<div class="overflow-x-auto overflow-y-visible">
+<table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+<thead class="bg-slate-50 dark:bg-slate-900/50">
+<tr>
+<th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider w-[180px]" scope="col">Timestamp</th>
+<th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider w-[220px]" scope="col">User &amp; Role</th>
+<th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider w-[180px]" scope="col">Action Type</th>
+<th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider" scope="col">
+                                Details (Diff View)
+                            </th>
+<th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider w-[180px]" scope="col">Integrity/Digital Signature</th>
+<th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider w-[160px]" scope="col">IP Address</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-200 dark:divide-slate-700 bg-white dark:bg-slate-800">
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+<td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 font-mono">
+                                Oct 24, 2023 <br/>
+<span class="text-slate-400 text-xs">14:30:45 UTC</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center">
+<div class="h-9 w-9 flex-shrink-0 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs">SJ</div>
+<div class="ml-4">
+<div class="text-sm font-medium text-slate-900 dark:text-white">Sarah Jenkins</div>
+<div class="text-xs text-slate-500">Super Admin</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="inline-flex items-center rounded-md bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-800 ring-1 ring-inset ring-yellow-600/20">
+<span class="material-symbols-outlined text-[14px] mr-1">edit</span> Settings Changed
+                                </span>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center text-sm gap-2 flex-wrap">
+<span class="text-slate-500 w-full mb-1 text-xs font-medium uppercase tracking-wide">Bank Details Update</span>
+<div class="flex items-center gap-2 font-mono text-xs bg-red-50 text-red-700 px-2 py-1 rounded border border-red-100 line-through decoration-red-400">
+                                        Acct: ...8891
+                                    </div>
+<span class="material-symbols-outlined text-slate-400 text-sm">arrow_right_alt</span>
+<div class="flex items-center gap-2 font-mono text-xs bg-green-50 text-green-700 px-2 py-1 rounded border border-green-100">
+                                        Acct: ...4420
+                                    </div>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="group relative inline-flex">
+<div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 cursor-help">
+<span class="material-symbols-outlined text-[16px]">verified</span>
+<span class="text-xs font-bold uppercase tracking-wider">Signed</span>
+</div>
+<div class="tooltip invisible opacity-0 absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-slate-900 text-white text-xs rounded-lg shadow-xl transition-all duration-200 pointer-events-none">
+<div class="flex flex-col gap-2">
+<div>
+<span class="text-slate-400 font-semibold block text-[10px] uppercase">SHA-256 Hash</span>
+<span class="font-mono text-[10px] break-all text-emerald-400">e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855</span>
+</div>
+<div class="border-t border-slate-700 pt-2">
+<span class="text-slate-400 font-semibold block text-[10px] uppercase">TSA Certificate</span>
+<span class="font-mono text-[10px]">DigiCert Timestamp 2023</span>
+</div>
+</div>
+<div class="absolute top-full left-1/2 -translate-x-1/2 -mt-2 border-4 border-transparent border-t-slate-900"></div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 font-mono">
+                                192.168.1.45
+                            </td>
+</tr>
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+<td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 font-mono">
+                                Oct 24, 2023 <br/>
+<span class="text-slate-400 text-xs">13:15:12 UTC</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center">
+<div class="h-9 w-9 flex-shrink-0 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs">MR</div>
+<div class="ml-4">
+<div class="text-sm font-medium text-slate-900 dark:text-white">Mike Ross</div>
+<div class="text-xs text-slate-500">Editor</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
+<span class="material-symbols-outlined text-[14px] mr-1">check_circle</span> Invoice Approved
+                                </span>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center text-sm gap-2 flex-wrap">
+<span class="text-slate-500 w-full mb-1 text-xs font-medium uppercase tracking-wide">Invoice #INV-2024-001</span>
+<div class="flex items-center gap-2 font-mono text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded border border-slate-200">
+                                        Status: Pending
+                                    </div>
+<span class="material-symbols-outlined text-slate-400 text-sm">arrow_right_alt</span>
+<div class="flex items-center gap-2 font-mono text-xs bg-green-50 text-green-700 px-2 py-1 rounded border border-green-100">
+                                        Status: Approved
+                                    </div>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="group relative inline-flex">
+<div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 cursor-help">
+<span class="material-symbols-outlined text-[16px]">verified</span>
+<span class="text-xs font-bold uppercase tracking-wider">Signed</span>
+</div>
+<div class="tooltip invisible opacity-0 absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-slate-900 text-white text-xs rounded-lg shadow-xl transition-all duration-200 pointer-events-none">
+<div class="flex flex-col gap-2">
+<div>
+<span class="text-slate-400 font-semibold block text-[10px] uppercase">SHA-256 Hash</span>
+<span class="font-mono text-[10px] break-all text-emerald-400">f2a1d88298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b899</span>
+</div>
+<div class="border-t border-slate-700 pt-2">
+<span class="text-slate-400 font-semibold block text-[10px] uppercase">TSA Certificate</span>
+<span class="font-mono text-[10px]">DigiCert Timestamp 2023</span>
+</div>
+</div>
+<div class="absolute top-full left-1/2 -translate-x-1/2 -mt-2 border-4 border-transparent border-t-slate-900"></div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 font-mono">
+                                192.168.1.12
+                            </td>
+</tr>
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+<td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 font-mono">
+                                Oct 24, 2023 <br/>
+<span class="text-slate-400 text-xs">11:45:00 UTC</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center">
+<div class="h-9 w-9 flex-shrink-0 rounded-full bg-slate-100 flex items-center justify-center text-slate-700 font-bold text-xs">
+<span class="material-symbols-outlined text-[18px]">smart_toy</span>
+</div>
+<div class="ml-4">
+<div class="text-sm font-medium text-slate-900 dark:text-white">System Bot</div>
+<div class="text-xs text-slate-500">Automated Process</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
+<span class="material-symbols-outlined text-[14px] mr-1">cloud_upload</span> Auto-Backup
+                                </span>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center text-sm gap-2">
+<span class="text-slate-600 text-xs">System database backup <span class="font-mono bg-slate-100 px-1 rounded">backup_v4.2.zip</span> successfully created and stored in S3 bucket.</span>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="group relative inline-flex">
+<div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 cursor-help">
+<span class="material-symbols-outlined text-[16px]">verified</span>
+<span class="text-xs font-bold uppercase tracking-wider">Signed</span>
+</div>
+<div class="tooltip invisible opacity-0 absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-slate-900 text-white text-xs rounded-lg shadow-xl transition-all duration-200 pointer-events-none">
+<div class="flex flex-col gap-2">
+<div>
+<span class="text-slate-400 font-semibold block text-[10px] uppercase">SHA-256 Hash</span>
+<span class="font-mono text-[10px] break-all text-emerald-400">a1b2c34298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b777</span>
+</div>
+<div class="border-t border-slate-700 pt-2">
+<span class="text-slate-400 font-semibold block text-[10px] uppercase">TSA Certificate</span>
+<span class="font-mono text-[10px]">DigiCert Timestamp 2023</span>
+</div>
+</div>
+<div class="absolute top-full left-1/2 -translate-x-1/2 -mt-2 border-4 border-transparent border-t-slate-900"></div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 font-mono">
+                                127.0.0.1
+                            </td>
+</tr>
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+<td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 font-mono">
+                                Oct 24, 2023 <br/>
+<span class="text-slate-400 text-xs">09:20:10 UTC</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center">
+<div class="h-9 w-9 flex-shrink-0 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs">SJ</div>
+<div class="ml-4">
+<div class="text-sm font-medium text-slate-900 dark:text-white">Sarah Jenkins</div>
+<div class="text-xs text-slate-500">Super Admin</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="inline-flex items-center rounded-md bg-purple-50 px-2 py-1 text-xs font-medium text-purple-700 ring-1 ring-inset ring-purple-700/10">
+<span class="material-symbols-outlined text-[14px] mr-1">person_add</span> User Added
+                                </span>
+</td>
+<td class="px-6 py-4">
+<div class="flex flex-col gap-1">
+<div class="text-xs text-slate-500">Created new user profile</div>
+<div class="flex items-center gap-2 font-mono text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded border border-purple-100 w-fit">
+                                        New User: John Doe (Viewer)
+                                    </div>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="group relative inline-flex">
+<div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 cursor-help">
+<span class="material-symbols-outlined text-[16px]">verified</span>
+<span class="text-xs font-bold uppercase tracking-wider">Signed</span>
+</div>
+<div class="tooltip invisible opacity-0 absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-slate-900 text-white text-xs rounded-lg shadow-xl transition-all duration-200 pointer-events-none">
+<div class="flex flex-col gap-2">
+<div>
+<span class="text-slate-400 font-semibold block text-[10px] uppercase">SHA-256 Hash</span>
+<span class="font-mono text-[10px] break-all text-emerald-400">77b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b123</span>
+</div>
+<div class="border-t border-slate-700 pt-2">
+<span class="text-slate-400 font-semibold block text-[10px] uppercase">TSA Certificate</span>
+<span class="font-mono text-[10px]">DigiCert Timestamp 2023</span>
+</div>
+</div>
+<div class="absolute top-full left-1/2 -translate-x-1/2 -mt-2 border-4 border-transparent border-t-slate-900"></div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 font-mono">
+                                192.168.1.45
+                            </td>
+</tr>
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors bg-red-50/30">
+<td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 font-mono">
+                                Oct 23, 2023 <br/>
+<span class="text-slate-400 text-xs">14:10:05 UTC</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center">
+<div class="h-9 w-9 flex-shrink-0 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 font-bold text-xs">
+<span class="material-symbols-outlined text-[18px]">dns</span>
+</div>
+<div class="ml-4">
+<div class="text-sm font-medium text-slate-900 dark:text-white">Admin Console</div>
+<div class="text-xs text-slate-500">System</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/10">
+<span class="material-symbols-outlined text-[14px] mr-1">warning</span> Login Failed
+                                </span>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center text-sm gap-2 text-red-700">
+<span class="text-xs font-medium">Multiple failed attempts detected for user 'admin_root'.</span>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="group relative inline-flex">
+<div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 cursor-help">
+<span class="material-symbols-outlined text-[16px]">verified</span>
+<span class="text-xs font-bold uppercase tracking-wider">Signed</span>
+</div>
+<div class="tooltip invisible opacity-0 absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-slate-900 text-white text-xs rounded-lg shadow-xl transition-all duration-200 pointer-events-none">
+<div class="flex flex-col gap-2">
+<div>
+<span class="text-slate-400 font-semibold block text-[10px] uppercase">SHA-256 Hash</span>
+<span class="font-mono text-[10px] break-all text-emerald-400">99b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b666</span>
+</div>
+<div class="border-t border-slate-700 pt-2">
+<span class="text-slate-400 font-semibold block text-[10px] uppercase">TSA Certificate</span>
+<span class="font-mono text-[10px]">DigiCert Timestamp 2023</span>
+</div>
+</div>
+<div class="absolute top-full left-1/2 -translate-x-1/2 -mt-2 border-4 border-transparent border-t-slate-900"></div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-red-600 font-mono font-medium">
+                                203.0.113.42
+                            </td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="bg-white dark:bg-slate-800 px-4 py-3 flex items-center justify-between border-t border-slate-200 dark:border-slate-700 sm:px-6 mt-auto">
+<div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+<div>
+<p class="text-sm text-slate-700 dark:text-slate-300">
+                                Showing <span class="font-medium text-slate-900 dark:text-white">1</span> to <span class="font-medium text-slate-900 dark:text-white">5</span> of <span class="font-medium text-slate-900 dark:text-white">128</span> results
+                            </p>
+</div>
+<div>
+<nav aria-label="Pagination" class="isolate inline-flex -space-x-px rounded-md shadow-sm">
+<a class="relative inline-flex items-center rounded-l-md px-2 py-2 text-slate-400 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0" href="#">
+<span class="sr-only">Previous</span>
+<span class="material-symbols-outlined text-[20px]">chevron_left</span>
+</a>
+<a aria-current="page" class="relative z-10 inline-flex items-center bg-primary px-4 py-2 text-sm font-semibold text-white focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="#">1</a>
+<a class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-slate-900 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0 dark:text-white dark:ring-slate-700 dark:hover:bg-slate-700" href="#">2</a>
+<a class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-slate-900 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0 dark:text-white dark:ring-slate-700 dark:hover:bg-slate-700" href="#">3</a>
+<span class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-slate-700 ring-1 ring-inset ring-slate-300 focus:outline-offset-0 dark:text-slate-400 dark:ring-slate-700">...</span>
+<a class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-slate-900 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0 dark:text-white dark:ring-slate-700 dark:hover:bg-slate-700" href="#">12</a>
+<a class="relative inline-flex items-center rounded-r-md px-2 py-2 text-slate-400 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0" href="#">
+<span class="sr-only">Next</span>
+<span class="material-symbols-outlined text-[20px]">chevron_right</span>
+</a>
+</nav>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+
+</body></html>

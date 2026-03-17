@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Security &amp; Report Settings Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#135bec",
+                        "primary-hover": "#1d4ed8",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101622",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "sans": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 antialiased overflow-hidden">
+<div class="flex h-screen w-full">
+<aside class="flex w-64 flex-col border-r border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 transition-all duration-300">
+<div class="p-6 border-b border-slate-100 dark:border-slate-800">
+<div class="flex items-center gap-3">
+<div class="h-10 w-10 overflow-hidden rounded-full bg-slate-200">
+<img alt="Profile picture of a manager" class="h-full w-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAjwGTW7mvzJTfNCRdf7AchUlMrbHVnrcJNXPimGGl6O-9dP4m-KU-ppEEV2-Qc8BmeSuyiSvqK9S1c7ICeZI1J7TAcMxnsl6fgLfMUovFDTnQXpCs8j2BWT4vyPSwx0HQSGCU7LM_ngNb9zaqo_YfFwVa_PfIAN2mKZpVme7-NI3-RXaDLqzcnPHz8iLBwK0o75RdYvBfF1N2zVOcC1R54iZ76uNwPBPIunkbrm1qe8yM5pBn22uuBg1n2CgdGhFmmzmLgQy3qrRrZ"/>
+</div>
+<div>
+<h2 class="text-sm font-semibold text-slate-900 dark:text-white">Alex Morgan</h2>
+<p class="text-xs text-slate-500 dark:text-slate-400">Finance Manager</p>
+</div>
+</div>
+</div>
+<nav class="flex-1 overflow-y-auto px-4 py-6 space-y-1">
+<a class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-primary dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-primary-400 transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">dashboard</span>
+                Dashboard
+            </a>
+<a class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-primary dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-primary-400 transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">description</span>
+                Pending Invoices
+                <span class="ml-auto rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">12</span>
+</a>
+<a class="group flex items-center gap-3 rounded-lg bg-primary/10 px-3 py-2 text-sm font-medium text-primary dark:bg-primary/20 transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">analytics</span>
+                Reports
+            </a>
+<a class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-primary dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-primary-400 transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+                Settings
+            </a>
+</nav>
+<div class="p-4 border-t border-slate-100 dark:border-slate-800">
+<button class="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 transition-colors">
+<span class="material-symbols-outlined text-[18px]">logout</span>
+                Sign Out
+            </button>
+</div>
+</aside>
+<main class="flex flex-1 flex-col overflow-hidden bg-background-light dark:bg-background-dark relative">
+<header class="z-10 flex flex-col gap-4 border-b border-slate-200 bg-white px-8 py-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 lg:flex-row lg:items-center lg:justify-between">
+<div>
+<h1 class="text-2xl font-bold text-slate-900 dark:text-white">Report Generation</h1>
+<p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Review approved invoices and export summaries.</p>
+</div>
+<div class="flex flex-wrap items-center gap-3">
+<div class="flex rounded-lg bg-slate-100 p-1 dark:bg-slate-800">
+<button class="rounded-md px-3 py-1.5 text-sm font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-all">Manual Export</button>
+<button class="rounded-md bg-white px-3 py-1.5 text-sm font-medium text-primary shadow-sm dark:bg-slate-700 dark:text-white transition-all">Automation</button>
+</div>
+</div>
+</header>
+<div class="flex-1 overflow-y-auto p-8 bg-slate-50 dark:bg-[#0b0f17]">
+<div class="mx-auto flex max-w-6xl gap-8">
+<div class="w-full max-w-2xl space-y-6">
+<div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-primary dark:bg-blue-900/20 dark:text-blue-400">
+<span class="material-symbols-outlined text-2xl">autorenew</span>
+</div>
+<div>
+<h3 class="text-lg font-semibold text-slate-900 dark:text-white">Enable Monthly Automated Reports</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400">Automatically generate and send reports on a schedule.</p>
+</div>
+</div>
+<label class="relative inline-flex cursor-pointer items-center">
+<input checked="" class="peer sr-only" type="checkbox"/>
+<div class="peer h-7 w-12 rounded-full bg-slate-200 after:absolute after:left-[2px] after:top-[2px] after:h-6 after:w-6 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:border-gray-600 dark:bg-slate-700 dark:peer-focus:ring-blue-800"></div>
+</label>
+</div>
+</div>
+<div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+<div class="flex items-center gap-3 mb-6">
+<span class="flex h-10 w-10 items-center justify-center rounded-full bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400">
+<span class="material-symbols-outlined text-[20px]">shield</span>
+</span>
+<h4 class="text-base font-semibold text-slate-900 dark:text-white">
+            Security &amp; Compliance
+        </h4>
+</div>
+<div class="flex items-start justify-between gap-4 p-4 rounded-lg bg-amber-50/50 border border-amber-100 dark:bg-amber-900/10 dark:border-amber-900/30">
+<div>
+<h5 class="text-sm font-medium text-slate-900 dark:text-white mb-1">Only Send to Verified Recipients</h5>
+<p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed max-w-sm">When enabled, reports will only be dispatched to email addresses that have successfully completed the verification process.</p>
+</div>
+<label class="relative inline-flex cursor-pointer items-center mt-1">
+<input checked="" class="peer sr-only" type="checkbox"/>
+<div class="peer h-6 w-11 rounded-full bg-slate-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-amber-200 dark:border-gray-600 dark:bg-slate-700 dark:peer-focus:ring-amber-900"></div>
+</label>
+</div><div class="mt-4 flex items-center justify-between gap-4 p-4 rounded-lg bg-slate-50 border border-slate-100 dark:bg-slate-800/50 dark:border-slate-800">
+<div>
+<h5 class="text-sm font-medium text-slate-900 dark:text-white mb-1">Maximum Login Attempts</h5>
+<p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed max-w-sm">Limit the number of failed login attempts before an account is temporarily locked (Hatalı Giriş Denemesi Sınırı).</p>
+</div>
+<div class="flex-shrink-0">
+<select class="block w-full rounded-lg border-slate-300 bg-white py-2 pl-3 pr-10 text-sm focus:border-primary focus:ring-primary dark:border-slate-700 dark:bg-slate-800 dark:text-white transition-colors">
+<option value="3">3 attempts</option>
+<option selected="" value="5">5 attempts</option>
+<option value="10">10 attempts</option>
+</select>
+</div>
+</div>
+<div class="mt-4 px-1">
+<div class="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-400">
+<span class="material-symbols-outlined text-[16px]">info</span>
+<span>Unverified recipients will be highlighted with a warning icon below.</span>
+</div>
+</div>
+</div>
+<div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+<h4 class="mb-6 text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+<span class="material-symbols-outlined text-slate-400">tune</span> Configuration
+                        </h4>
+<div class="space-y-6">
+<div>
+<label class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Recipients</label>
+<div class="relative">
+<div class="mb-2 flex flex-wrap gap-2" id="recipient-tags">
+<span class="inline-flex items-center gap-1 rounded bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+        Managers (3)
+        <button class="text-slate-400 hover:text-slate-600"><span class="material-symbols-outlined text-[14px]">close</span></button>
+</span>
+<span class="inline-flex items-center gap-1 rounded bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-transparent">
+        Accounts Dept (All)
+        <button class="text-slate-400 hover:text-slate-600"><span class="material-symbols-outlined text-[14px]">close</span></button>
+</span>
+<span class="inline-flex items-center gap-1 rounded bg-red-50 border border-red-200 px-2 py-1 text-xs font-medium text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400" title="Unverified Recipient">
+<span class="material-symbols-outlined text-[14px] text-red-500">warning</span>
+        External Audit (unverified)
+        <button class="text-red-400 hover:text-red-600"><span class="material-symbols-outlined text-[14px]">close</span></button>
+</span>
+</div>
+<select class="w-full rounded-lg border-slate-300 bg-white py-2.5 pl-3 pr-10 text-sm focus:border-primary focus:ring-primary dark:border-slate-700 dark:bg-slate-800 dark:text-white" multiple="">
+<option selected="" value="managers">Managers (3 selected)</option>
+<option selected="" value="accounts">Accounts Dept (All)</option>
+<option value="external">External Audit (unverified)</option>
+<option value="staff">Staff Members</option>
+<option value="exec">Executive Team</option>
+</select>
+<div class="absolute right-3 top-12 pointer-events-none">
+<span class="material-symbols-outlined text-slate-400 text-[20px]">unfold_more</span>
+</div>
+<p class="mt-1.5 text-xs text-slate-500">Hold Ctrl/Cmd to select multiple groups.</p>
+</div>
+</div>
+<div>
+<label class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Schedule Frequency</label>
+<div class="grid grid-cols-3 gap-3">
+<label class="cursor-pointer rounded-lg border border-slate-200 p-3 hover:bg-slate-50 has-[:checked]:border-primary has-[:checked]:bg-blue-50 has-[:checked]:ring-1 has-[:checked]:ring-primary dark:border-slate-700 dark:hover:bg-slate-800 dark:has-[:checked]:bg-blue-900/20">
+<input class="sr-only" name="schedule" type="radio" value="1st"/>
+<div class="flex flex-col items-center gap-1">
+<span class="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">Every Month</span>
+<span class="font-bold text-slate-900 dark:text-white">1st Day</span>
+</div>
+</label>
+<label class="cursor-pointer rounded-lg border border-slate-200 p-3 hover:bg-slate-50 has-[:checked]:border-primary has-[:checked]:bg-blue-50 has-[:checked]:ring-1 has-[:checked]:ring-primary dark:border-slate-700 dark:hover:bg-slate-800 dark:has-[:checked]:bg-blue-900/20">
+<input class="sr-only" name="schedule" type="radio" value="15th"/>
+<div class="flex flex-col items-center gap-1">
+<span class="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">Every Month</span>
+<span class="font-bold text-slate-900 dark:text-white">15th Day</span>
+</div>
+</label>
+<label class="cursor-pointer rounded-lg border border-slate-200 p-3 hover:bg-slate-50 has-[:checked]:border-primary has-[:checked]:bg-blue-50 has-[:checked]:ring-1 has-[:checked]:ring-primary dark:border-slate-700 dark:hover:bg-slate-800 dark:has-[:checked]:bg-blue-900/20">
+<input checked="" class="sr-only" name="schedule" type="radio" value="last"/>
+<div class="flex flex-col items-center gap-1">
+<span class="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">Every Month</span>
+<span class="font-bold text-slate-900 dark:text-white">Last Day</span>
+</div>
+</label>
+</div>
+</div>
+<div>
+<label class="mb-3 block text-sm font-medium text-slate-700 dark:text-slate-300">Include in Report</label>
+<div class="space-y-3">
+<label class="flex items-center gap-3 rounded-lg border border-slate-200 p-3 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800">
+<input checked="" class="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary dark:border-slate-600 dark:bg-slate-700" type="checkbox"/>
+<div class="flex flex-1 items-center gap-3">
+<span class="flex h-8 w-8 items-center justify-center rounded bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400">
+<span class="material-symbols-outlined text-[18px]">check_circle</span>
+</span>
+<div>
+<p class="text-sm font-medium text-slate-900 dark:text-white">Approved Invoices</p>
+<p class="text-xs text-slate-500">Processed and cleared for payment</p>
+</div>
+</div>
+</label>
+<label class="flex items-center gap-3 rounded-lg border border-slate-200 p-3 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800">
+<input class="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary dark:border-slate-600 dark:bg-slate-700" type="checkbox"/>
+<div class="flex flex-1 items-center gap-3">
+<span class="flex h-8 w-8 items-center justify-center rounded bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400">
+<span class="material-symbols-outlined text-[18px]">cancel</span>
+</span>
+<div>
+<p class="text-sm font-medium text-slate-900 dark:text-white">Rejected Invoices</p>
+<p class="text-xs text-slate-500">Denied or flagged for review</p>
+</div>
+</div>
+</label>
+<label class="flex items-center gap-3 rounded-lg border border-slate-200 p-3 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800">
+<input checked="" class="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary dark:border-slate-600 dark:bg-slate-700" type="checkbox"/>
+<div class="flex flex-1 items-center gap-3">
+<span class="flex h-8 w-8 items-center justify-center rounded bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400">
+<span class="material-symbols-outlined text-[18px]">bar_chart</span>
+</span>
+<div>
+<p class="text-sm font-medium text-slate-900 dark:text-white">Summary Statistics</p>
+<p class="text-xs text-slate-500">Overview charts and total breakdowns</p>
+</div>
+</div>
+</label>
+</div>
+</div>
+</div>
+<div class="mt-8 flex justify-end gap-3 border-t border-slate-100 pt-6 dark:border-slate-800">
+<button class="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800">Discard Changes</button>
+<button class="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover shadow-sm">
+<span class="material-symbols-outlined text-[18px]">save</span>
+                                Save Configuration
+                            </button>
+</div>
+</div>
+</div>
+<div class="flex-1">
+<div class="sticky top-6">
+<div class="mb-4 flex items-center justify-between">
+<h3 class="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Email Template Preview</h3>
+<span class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                                Live Preview
+                            </span>
+</div>
+<div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-800 dark:bg-slate-900">
+<div class="bg-slate-50 px-6 py-4 border-b border-slate-100 dark:bg-slate-800/50 dark:border-slate-800">
+<div class="mb-2 flex items-center gap-2">
+<span class="text-xs font-medium text-slate-500 w-12">From:</span>
+<span class="text-xs text-slate-900 dark:text-white">Invoicely Automation &lt;no-reply@invoicely.com&gt;</span>
+</div>
+<div class="mb-2 flex items-center gap-2">
+<span class="text-xs font-medium text-slate-500 w-12">To:</span>
+<span class="text-xs text-slate-900 dark:text-white">finance-managers@company.com; accounts@company.com</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-xs font-medium text-slate-500 w-12">Subject:</span>
+<span class="text-xs font-semibold text-slate-900 dark:text-white">Monthly Expense Report - [Current Month]</span>
+</div>
+</div>
+<div class="p-6">
+<div class="mb-6">
+<p class="mb-4 text-sm text-slate-600 dark:text-slate-300">Hello Team,</p>
+<p class="mb-4 text-sm text-slate-600 dark:text-slate-300">Here is the automated monthly expense report for <strong>October 2023</strong>. This report includes all approved invoices and summary statistics processed within the last billing cycle.</p>
+<p class="text-sm text-slate-600 dark:text-slate-300">Please review the attached PDF for detailed line items.</p>
+</div>
+<div class="mb-6 flex items-center gap-4 rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/50">
+<div class="flex h-10 w-10 items-center justify-center rounded bg-red-100 text-red-600">
+<span class="material-symbols-outlined text-[24px]">picture_as_pdf</span>
+</div>
+<div class="flex-1">
+<p class="text-sm font-medium text-slate-900 dark:text-white">Expense_Report_Oct_2023.pdf</p>
+<p class="text-xs text-slate-500">2.4 MB • Generated automatically</p>
+</div>
+<button class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+<span class="material-symbols-outlined text-[20px]">download</span>
+</button>
+</div>
+<div class="mt-8 border-t border-slate-100 pt-6 text-center dark:border-slate-800">
+<p class="text-xs text-slate-400">
+                                        You are receiving this email because your account is subscribed to automated reports in Invoicely.
+                                        <a class="text-primary hover:underline" href="#">Manage preferences</a>
+</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

@@ -1,0 +1,31 @@
+﻿src/views/EmailVerificationStatusModal.tsx(212,186): error TS1003: Identifier expected.
+src/views/EmailVerificationStatusModal.tsx(212,189): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/views/EmailVerificationStatusModal.tsx(215,3): error TS17002: Expected corresponding JSX closing tag for 'div'.
+src/views/EmailVerificationStatusModal.tsx(221,3): error TS17015: Expected corresponding closing tag for JSX fragment.
+src/views/EmailVerificationStatusModal.tsx(223,1): error TS1109: Expression expected.
+src/views/EmailVerificationStatusModal.tsx(223,3): error TS1109: Expression expected.
+src/views/EmailVerificationStatusModal.tsx(224,3): error TS1109: Expression expected.
+src/views/GeneratedScreen.tsx(12,161): error TS17002: Expected corresponding JSX closing tag for 'div'.
+src/views/GeneratedScreen.tsx(13,3): error TS17002: Expected corresponding JSX closing tag for 'div'.
+src/views/GeneratedScreen.tsx(14,3): error TS17015: Expected corresponding closing tag for JSX fragment.
+src/views/GeneratedScreen.tsx(15,1): error TS1109: Expression expected.
+src/views/GeneratedScreen.tsx(59,1): error TS1128: Declaration or statement expected.
+src/views/GeneratedScreen.tsx(59,3): error TS1109: Expression expected.
+src/views/GeneratedScreen.tsx(60,3): error TS1109: Expression expected.
+src/views/SecureBiometricLoginScreen.tsx(32,122): error TS17002: Expected corresponding JSX closing tag for 'div'.
+src/views/SecureBiometricLoginScreen.tsx(33,3): error TS17002: Expected corresponding JSX closing tag for 'div'.
+src/views/SecureBiometricLoginScreen.tsx(101,3): error TS17015: Expected corresponding closing tag for JSX fragment.
+src/views/SecureBiometricLoginScreen.tsx(103,6): error TS1005: ';' expected.
+src/views/SecureBiometricLoginScreen.tsx(104,1): error TS2657: JSX expressions must have one parent element.
+src/views/SecureBiometricLoginScreen.tsx(106,1): error TS1128: Declaration or statement expected.
+src/views/SecureBiometricLoginScreen.tsx(107,1): error TS1109: Expression expected.
+src/views/SecureBiometricLoginScreen.tsx(109,1): error TS1109: Expression expected.
+src/views/SecureBiometricLoginScreen.tsx(109,3): error TS1109: Expression expected.
+src/views/SecureBiometricLoginScreen.tsx(110,3): error TS1109: Expression expected.
+src/views/StaffInvoiceUploadDashboard.tsx(198,239): error TS1003: Identifier expected.
+src/views/StaffInvoiceUploadDashboard.tsx(198,242): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/views/StaffInvoiceUploadDashboard.tsx(198,253): error TS17002: Expected corresponding JSX closing tag for 'div'.
+src/views/StaffInvoiceUploadDashboard.tsx(204,3): error TS17015: Expected corresponding closing tag for JSX fragment.
+src/views/StaffInvoiceUploadDashboard.tsx(206,1): error TS1109: Expression expected.
+src/views/StaffInvoiceUploadDashboard.tsx(206,3): error TS1109: Expression expected.
+src/views/StaffInvoiceUploadDashboard.tsx(207,3): error TS1109: Expression expected.
