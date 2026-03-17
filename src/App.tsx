@@ -91,7 +91,7 @@ function AppRoutes() {
           </ProtectedRoute>
         } />
         <Route path="rejected-documents" element={
-          <ProtectedRoute requireRole={['muhasebe', 'satinalma']}>
+          <ProtectedRoute requireRole={['muhasebe', 'satinalma', 'manager', 'yonetici']}>
             <RejectedDocumentsScreen />
           </ProtectedRoute>
         } />

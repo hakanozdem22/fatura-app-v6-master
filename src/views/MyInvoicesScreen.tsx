@@ -17,12 +17,25 @@ interface Invoice {
     rejected_by_id?: string;
     rejector?: {
         full_name: string;
+        role?: string;
     };
 }
+
+const getRoleTitle = (role: string = '') => {
+    const r = role.toLowerCase().trim();
+    if (r === 'manager') return 'Müdür';
+    if (r === 'yonetici') return 'Yönetici';
+    if (r === 'muhasebe') return 'Muhasebe';
+    if (r === 'satinalma') return 'Satın Alma';
+    if (r === 'irsaliye') return 'İrsaliye Sorumlusu';
+    if (r === 'fatura_irsaliye') return 'Fatura / İrsaliye Sorumlusu';
+    return 'Fatura Sorumlusu';
+};
 
 export default function MyInvoicesScreen() {
     const { user, profile } = useAuth();
     const [invoices, setInvoices] = useState<Invoice[]>([]);
+    const [userMap, setUserMap] = useState<Record<string, string>>({});
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('Tümü');
@@ -38,27 +51,24 @@ export default function MyInvoicesScreen() {
         if (!user) return;
         setIsLoading(true);
         try {
-            // İlk olarak geniş sorguyu dene (rejector join'i ile)
-            // select('*, rejector:users!rejected_by_id(full_name)') kısmında 
-            // rejected_by_id kolonu yoksa veya ilişki tanınmıyorsa PostgREST hata verir.
-            let { data, error } = await supabase
+            // Belgeleri çek
+            const { data, error } = await supabase
                 .from('invoices')
-                .select('*, rejector:users!rejected_by_id(full_name)')
+                .select('*')
                 .eq('user_id', user.id)
                 .order('created_at', { ascending: false });
 
-            // Eğer hata alırsak (kolon eksikliği veya ilişki hatası), basit sorguya dön
-            if (error) {
-                console.warn("Detaylı sorgu hatası, basit sorguya dönülüyor:", error.message);
-                const { data: simpleData, error: simpleError } = await supabase
-                    .from('invoices')
-                    .select('*')
-                    .eq('user_id', user.id)
-                    .order('created_at', { ascending: false });
+            if (error) throw error;
 
-                if (simpleError) throw simpleError;
-                data = simpleData;
-                error = null;
+            // Kullanıcıları da çekerek isim eşleşmesi yap (yedek mekanizma)
+            const { data: usersData } = await supabase.from('users').select('id, full_name, role');
+            if (usersData) {
+                const map: Record<string, string> = {};
+                (usersData as { id: string, full_name: string, role: string }[]).forEach(u => {
+                    const title = getRoleTitle(u.role);
+                    map[u.id] = `${u.full_name} (${title})`;
+                });
+                setUserMap(map);
             }
 
             setInvoices(data || []);
@@ -121,10 +131,10 @@ export default function MyInvoicesScreen() {
                 <button
                     onClick={() => {
                         setSelectedNote(invoice.rejection_note || 'Neden belirtilmemiş.');
-                        setSelectedRejectorName(invoice.rejector?.full_name || 'Bilinmiyor');
+                        setSelectedRejectorName(invoice.rejector?.full_name || (invoice.rejected_by_id ? userMap[invoice.rejected_by_id] : '') || 'Bilinmiyor');
                         setIsReasonModalOpen(true);
                     }}
-                    className="flex items-center gap-2 group cursor-pointer hover:opacity-80 active:scale-95 transition-all outline-none"
+                    className="inline-flex items-center justify-center gap-2 group cursor-pointer hover:opacity-80 active:scale-95 transition-all outline-none mx-auto w-fit"
                     title="Ret Nedenini Gör"
                 >
                     <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800 dark:bg-red-900/30 dark:text-red-400 group-hover:bg-red-200 dark:group-hover:bg-red-800/50 transition-colors">

@@ -45,7 +45,7 @@ export default function Sidebar({ isCollapsed = false, toggleSidebar }: SidebarP
             name: 'Reddedilenler',
             path: '/rejected-documents',
             icon: 'hide_source',
-            roles: ['muhasebe', 'satinalma']
+            roles: ['muhasebe', 'satinalma', 'manager', 'yonetici']
         },
         { name: 'Sistem Kayıtları', path: '/system-logs', icon: 'manage_search', roles: ['admin', 'manager', 'yonetici'] },
         { name: 'Ayarlar', path: '/settings', icon: 'settings', roles: ['admin', 'manager', 'yonetici', 'user', 'fatura sorumlusu', 'fatura_sorumlusu', 'muhasebe', 'satinalma', 'irsaliye', 'fatura_irsaliye'] },

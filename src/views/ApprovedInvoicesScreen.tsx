@@ -54,7 +54,8 @@ export default function ApprovedInvoicesScreen() {
             } else if (isSatinalma) {
                 query = query.eq('status', 'Müdür Onaylı').eq('document_type', 'İrsaliye');
             } else if (isManager) {
-                query = query.eq('status', 'Onaylandı');
+                // Müdür hem tamamen onaylanmışları hem de kendi onaylayıp muhasebe/satın alma bekleyenleri görsün
+                query = query.in('status', ['Onaylandı', 'Müdür Onaylı']);
                 if (user?.id) query = query.eq('approved_by', user.id);
             } else {
                 query = query.eq('status', 'Onaylandı');
@@ -276,9 +277,10 @@ export default function ApprovedInvoicesScreen() {
                         if (uploadError) throw uploadError;
                         const { data: { publicUrl } } = supabase.storage.from('invoices-pdfs').getPublicUrl(`stamped/${newFileName}`);
                         finalFileUrl = publicUrl;
-                    } catch (e: any) {
+                    } catch (e: unknown) {
                         console.error("PDF ret kaşesi hatası:", e);
-                        setActionStatus({ type: 'error', message: 'PDF ret kaşesi eklenemedi: ' + (e.message || 'Bilinmeyen hata') });
+                        const errorMessage = e instanceof Error ? e.message : 'Bilinmeyen hata';
+                        setActionStatus({ type: 'error', message: 'PDF ret kaşesi eklenemedi: ' + errorMessage });
                         setIsProcessing(false);
                         return;
                     }
@@ -323,9 +325,10 @@ export default function ApprovedInvoicesScreen() {
                             const { data: { publicUrl } } = supabase.storage.from('invoices-pdfs').getPublicUrl(`stamped/${newFileName}`);
                             finalFileUrl = publicUrl;
                         }
-                    } catch (imgError: any) {
+                    } catch (imgError: unknown) {
                         console.error("Görsel ret kaşesi hatası:", imgError);
-                        setActionStatus({ type: 'error', message: 'Görsel ret kaşesi eklenemedi: ' + (imgError.message || 'Bilinmeyen hata') });
+                        const errorMessage = imgError instanceof Error ? imgError.message : 'Bilinmeyen hata';
+                        setActionStatus({ type: 'error', message: 'Görsel ret kaşesi eklenemedi: ' + errorMessage });
                         setIsProcessing(false);
                         return;
                     }
@@ -360,9 +363,10 @@ export default function ApprovedInvoicesScreen() {
                 setSelectedInvoice(null);
                 setIsRejecting(false);
             }, 1500);
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("Red hatası:", err);
-            setActionStatus({ type: 'error', message: 'Hata: ' + (err.message || 'İşlem sırasında bir hata oluştu.') });
+            const errorMessage = err instanceof Error ? err.message : 'İşlem sırasında bir hata oluştu.';
+            setActionStatus({ type: 'error', message: 'Hata: ' + errorMessage });
         } finally {
             setIsProcessing(false);
         }
@@ -509,11 +513,11 @@ export default function ApprovedInvoicesScreen() {
                                         <td className="px-6 py-4 text-center">
                                             {invoice.status === 'Müdür Onaylı' ? (
                                                 <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
-                                                    {invoice.document_type === 'İrsaliye' ? 'Onay Bekliyor (Satın Alma)' : 'Onay Bekliyor (Muhasebe)'}
+                                                    {invoice.document_type === 'İrsaliye' ? 'Satın Alma Onayında' : 'Muhasebe Onayında'}
                                                 </span>
                                             ) : (
                                                 <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">
-                                                    Arşivlendi
+                                                    Onaylandı
                                                 </span>
                                             )}
                                         </td>

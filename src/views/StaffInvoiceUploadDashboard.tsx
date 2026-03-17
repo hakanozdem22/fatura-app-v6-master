@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabaseClient';
 import { FileUp, Loader2, CheckCircle2, AlertCircle, ChevronDown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { logAction } from '../lib/logger';
+import { PDFDocument } from 'pdf-lib';
 
 interface Invoice {
     id: string;
@@ -116,6 +117,7 @@ export default function StaffInvoiceUploadDashboard() {
     const [pendingInvoiceData, setPendingInvoiceData] = useState<Omit<Invoice, 'id'> | null>(null);
     const [previewFileUrl, setPreviewFileUrl] = useState<string | null>(null);
     const [previewFileType, setPreviewFileType] = useState<string | null>(null);
+    const [pageCount, setPageCount] = useState<number>(1);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -215,6 +217,21 @@ export default function StaffInvoiceUploadDashboard() {
 
             setPreviewFileUrl(URL.createObjectURL(file));
             setPreviewFileType(file.type);
+
+            // PDF sayfa sayısını öğren
+            if (file.type === 'application/pdf') {
+                try {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const pdfDoc = await PDFDocument.load(arrayBuffer);
+                    setPageCount(pdfDoc.getPageCount());
+                } catch (e) {
+                    console.error("PDF sayfa sayısı okunamadı:", e);
+                    setPageCount(1);
+                }
+            } else {
+                setPageCount(1);
+            }
+
             setShowPreviewModal(true);
 
         } catch (error: unknown) {
@@ -379,7 +396,7 @@ export default function StaffInvoiceUploadDashboard() {
                                     <span className="material-symbols-outlined text-sm">filter_center_focus</span> Orijinal Belge
                                 </h3>
                                 <div className="flex items-center gap-2 bg-[#1e293b] rounded-lg p-1 px-3 border border-slate-700">
-                                    <span className="text-xs font-mono text-slate-400">1 / 1</span>
+                                    <span className="text-xs font-mono text-slate-400">1 / {pageCount}</span>
                                     <div className="w-[1px] h-3 bg-slate-700 mx-2"></div>
                                     <div className="flex gap-4">
                                         <span className="material-symbols-outlined text-[18px] cursor-pointer hover:text-white transition">remove</span>
@@ -391,7 +408,7 @@ export default function StaffInvoiceUploadDashboard() {
                             <div className="flex-1 overflow-hidden flex justify-center items-center p-8">
                                 <div className="w-full h-full bg-slate-900/50 rounded-xl border border-slate-800/50 overflow-hidden shadow-2xl relative group">
                                     {previewFileType?.includes('pdf') ? (
-                                        <embed src={previewFileUrl || ''} type="application/pdf" className="w-full h-full filter invert-[0.05]" />
+                                        <iframe src={previewFileUrl || ''} className="w-full h-[800px] border-none filter invert-[0.05]" />
                                     ) : (
                                         <img src={previewFileUrl || ''} alt="Belge" className="max-w-full max-h-full object-contain mx-auto transition-transform duration-500" />
                                     )}

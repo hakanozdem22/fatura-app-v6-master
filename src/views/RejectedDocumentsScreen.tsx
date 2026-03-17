@@ -19,11 +19,24 @@ interface Invoice {
     created_at?: string;
     approved_at?: string;
     rejection_note?: string;
+    rejected_by_id?: string;
 }
 
+const getRoleTitle = (role: string = '') => {
+    const r = role.toLowerCase().trim();
+    if (r === 'manager') return 'Müdür';
+    if (r === 'yonetici') return 'Yönetici';
+    if (r === 'muhasebe') return 'Muhasebe';
+    if (r === 'satinalma') return 'Satın Alma';
+    if (r === 'irsaliye') return 'İrsaliye Sorumlusu';
+    if (r === 'fatura_irsaliye') return 'Fatura / İrsaliye Sorumlusu';
+    return 'Fatura Sorumlusu';
+};
+
 export default function RejectedDocumentsScreen() {
-    const { profile } = useAuth();
+    const { user, profile } = useAuth();
     const [invoices, setInvoices] = useState<Invoice[]>([]);
+    const [userMap, setUserMap] = useState<Record<string, string>>({});
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [confirmModal, setConfirmModal] = useState<{ show: boolean, invoice: Invoice | null }>({ show: false, invoice: null });
@@ -34,6 +47,7 @@ export default function RejectedDocumentsScreen() {
     const role = profile?.role?.toLowerCase().trim();
     const isSatinalma = role === 'satinalma';
     const isMuhasebe = role === 'muhasebe';
+    const isManager = role === 'manager' || role === 'yonetici';
 
     const fetchRejected = useCallback(async () => {
         setIsLoading(true);
@@ -48,6 +62,11 @@ export default function RejectedDocumentsScreen() {
                 query = query.eq('document_type', 'İrsaliye');
             } else if (isMuhasebe) {
                 query = query.neq('document_type', 'İrsaliye');
+            } else if (isManager) {
+                // Müdürler sadece kendi reddettiklerini görsün
+                if (user?.id) {
+                    query = query.eq('rejected_by_id', user.id);
+                }
             }
 
             const { data, error } = await query;
@@ -57,12 +76,23 @@ export default function RejectedDocumentsScreen() {
             } else {
                 setInvoices(data || []);
             }
+
+            // Kullanıcıları çek
+            const { data: usersData } = await supabase.from('users').select('id, full_name, role');
+            if (usersData) {
+                const map: Record<string, string> = {};
+                (usersData as { id: string, full_name: string, role: string }[]).forEach(u => {
+                    const title = getRoleTitle(u.role);
+                    map[u.id] = `${u.full_name} (${title})`;
+                });
+                setUserMap(map);
+            }
         } catch (err) {
             console.error("Beklenmeyen hata:", err);
         } finally {
             setIsLoading(false);
         }
-    }, [isSatinalma, isMuhasebe]);
+    }, [isSatinalma, isMuhasebe, isManager, user?.id]);
 
     useEffect(() => {
         fetchRejected();
@@ -247,7 +277,7 @@ export default function RejectedDocumentsScreen() {
                     </h2>
                 </div>
                 <p className="text-slate-500 dark:text-slate-400">
-                    Hatalı olarak reddedilmiş belgeleri buradan inceleyebilir ve yeniden onaylayabilirsiniz.
+                    {isManager ? "Kendi reddettiğiniz belgeleri buradan inceleyebilir ve gerekirse yeniden onaylayabilirsiniz." : "Hatalı olarak reddedilmiş belgeleri buradan inceleyebilir ve yeniden onaylayabilirsiniz."}
                 </p>
             </header>
 
@@ -281,6 +311,7 @@ export default function RejectedDocumentsScreen() {
                                 <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center">
                                     {isSatinalma ? 'İrsaliye No' : isMuhasebe ? 'Fatura No' : 'Belge No'}
                                 </th>
+                                <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center">Belge Tipi</th>
                                 <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center">Belge Tarihi</th>
                                 <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center">Red Nedeni</th>
                                 <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center">Durum</th>
@@ -312,8 +343,16 @@ export default function RejectedDocumentsScreen() {
                                             {invoice.company_name || <span className="text-slate-400 italic">Bilinmiyor</span>}
                                         </td>
                                         <td className="px-6 py-4 font-medium text-slate-500 dark:text-slate-400 text-center">{invoice.invoice_no}</td>
-                                        <td className="px-6 py-4 text-slate-500 dark:text-slate-400 text-center">
-                                            {new Date(invoice.submission_date).toLocaleDateString('tr-TR')}
+                                        <td className="px-6 py-4 text-center">
+                                            <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium border ${invoice.document_type === 'İrsaliye'
+                                                ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800/50'
+                                                : 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800/50'
+                                                }`}>
+                                                {invoice.document_type || 'Belirtilmedi'}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 text-slate-500 dark:text-slate-400 text-center whitespace-nowrap">
+                                            {invoice.submission_date ? new Date(invoice.submission_date).toLocaleDateString('tr-TR') : '-'}
                                         </td>
                                         <td className="px-6 py-4 text-slate-500 dark:text-slate-400 text-center max-w-[200px] truncate">
                                             {invoice.rejection_note || 'Belirtilmedi'}
@@ -364,7 +403,7 @@ export default function RejectedDocumentsScreen() {
                                         {selectedInvoice.company_name}
                                     </h3>
                                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                                        Fatura No: {selectedInvoice.invoice_no} | Red Nedeni: {selectedInvoice.rejection_note || 'Belirtilmedi'}
+                                        Fatura No: {selectedInvoice.invoice_no} | Reddeden: {selectedInvoice.rejected_by_id ? userMap[selectedInvoice.rejected_by_id] || 'Bilinmiyor' : 'Sistem'}
                                     </p>
                                 </div>
                             </div>
@@ -409,7 +448,13 @@ export default function RejectedDocumentsScreen() {
                                         <div>
                                             <p className="text-[10px] text-slate-400 uppercase font-bold tracking-tighter">İşlem Tarihi</p>
                                             <p className="text-sm font-medium text-slate-900 dark:text-white">
-                                                {new Date(selectedInvoice.submission_date).toLocaleDateString('tr-TR')}
+                                                {selectedInvoice.submission_date ? new Date(selectedInvoice.submission_date).toLocaleDateString('tr-TR') : '-'}
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] text-slate-400 uppercase font-bold tracking-tighter">Reddeden Kişi</p>
+                                            <p className="text-sm font-medium text-indigo-600 dark:text-indigo-400">
+                                                {selectedInvoice.rejected_by_id ? userMap[selectedInvoice.rejected_by_id] || 'Bilinmiyor' : 'Sistem'}
                                             </p>
                                         </div>
                                         <div>

@@ -239,7 +239,7 @@ export default function ManagerApprovalWorkspace() {
       if (isYonetici) {
         setActionStatus({ type: 'success', message: `Belge #${selectedInvoice.invoice_no} onaylandı. Lütfen üst onaya (Müdür) yönlendiriniz.` });
       } else {
-        setActionStatus({ type: 'success', message: `Belge #${selectedInvoice.invoice_no} onaylandı. (${selectedInvoice.document_type === 'İrsaliye' ? 'Satın Alma' : 'Muhasebe'} onayı bekleniyor)` });
+        setActionStatus({ type: 'success', message: `Belge #${selectedInvoice.invoice_no} onaylandı. ${selectedInvoice.document_type === 'İrsaliye' ? 'Satın Alma' : 'Muhasebe'} birimine yönlendirildi.` });
       }
 
       await logAction(
@@ -380,12 +380,6 @@ export default function ManagerApprovalWorkspace() {
             return;
           }
         }
-      } else if (!stampUrl) {
-        // Kaşe ayarlanmamış uyarısı ver ama isterseniz devam etsin. 
-        // Kullanıcı özellikle "eklenmemiş" dediği için burada durdurup uyarmak en iyisi.
-        setActionStatus({ type: 'error', message: 'Ret kaşesi ayarlanmamış! Lütfen ayarlardan yükleyin.' });
-        setIsProcessing(false);
-        return;
       }
 
       const { error } = await supabase
@@ -678,8 +672,8 @@ export default function ManagerApprovalWorkspace() {
                       />
                     ) : (
                       <iframe
-                        src={`${selectedInvoice.file_url}#toolbar=0&navpanes=0`}
-                        className="w-full h-[1200px] border-none"
+                        src={selectedInvoice.file_url}
+                        className="w-full h-screen min-h-[1200px] border-none"
                         title="PDF Önizleme"
                       />
                     )
