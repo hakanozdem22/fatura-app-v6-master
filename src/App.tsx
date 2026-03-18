@@ -12,6 +12,7 @@ import MyInvoicesScreen from './views/MyInvoicesScreen';
 import SettingsScreen from './views/SettingsScreen';
 import InvoiceArchiveScreen from './views/InvoiceArchiveScreen';
 import RejectedDocumentsScreen from './views/RejectedDocumentsScreen';
+
 import UpdateModal from './components/UpdateModal';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
@@ -105,6 +106,7 @@ function AppRoutes() {
             <SystemLogsScreen />
           </ProtectedRoute>
         } />
+
         <Route path="settings" element={
           <ProtectedRoute>
             <SettingsScreen />
@@ -115,6 +117,8 @@ function AppRoutes() {
     </Routes>
   );
 }
+
+
 
 export default function App() {
   return (

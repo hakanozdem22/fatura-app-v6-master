@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import { Loader2, Search, FileText } from 'lucide-react';
+import { Loader2, Search, FileText, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 interface Invoice {
@@ -23,6 +23,10 @@ export default function InvoiceArchiveScreen() {
     const [searchQuery, setSearchQuery] = useState('');
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
+    const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({
+        key: 'approved_at',
+        direction: 'desc'
+    });
 
     const role = profile?.role?.toLowerCase().trim();
     const isSatinalma = role === 'satinalma';
@@ -36,7 +40,7 @@ export default function InvoiceArchiveScreen() {
                 .from('invoices')
                 .select('*')
                 .eq('status', 'Onaylandı')
-                .order('created_at', { ascending: false });
+                .order(sortConfig.key, { ascending: sortConfig.direction === 'asc' });
 
             if (isSatinalma) {
                 query = query.eq('document_type', 'İrsaliye');
@@ -60,7 +64,19 @@ export default function InvoiceArchiveScreen() {
         } finally {
             setIsLoading(false);
         }
-    }, [isSatinalma, isMuhasebe, role]);
+    }, [isSatinalma, isMuhasebe, role, sortConfig]);
+
+    const handleSort = (key: string) => {
+        setSortConfig(prev => ({
+            key,
+            direction: prev.key === key && prev.direction === 'desc' ? 'asc' : 'desc'
+        }));
+    };
+
+    const SortIcon = ({ columnKey }: { columnKey: string }) => {
+        if (sortConfig.key !== columnKey) return <ChevronsUpDown size={14} className="ml-1 opacity-30 group-hover:opacity-60 transition-opacity" />;
+        return sortConfig.direction === 'asc' ? <ChevronUp size={14} className="ml-1 text-primary" /> : <ChevronDown size={14} className="ml-1 text-primary" />;
+    };
 
     useEffect(() => {
         fetchArchive();
@@ -91,10 +107,10 @@ export default function InvoiceArchiveScreen() {
         return matchesSearch && matchesDate;
     });
 
-    const dynamicColSpan = 6;
+    const dynamicColSpan = 8;
 
     return (
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 p-8">
+        <div className="mx-auto flex w-full max-w-[1450px] flex-col gap-8 p-8">
             <header className="flex flex-col gap-1">
                 <h2 className="text-3xl font-bold text-slate-900 dark:text-white">
                     {isSatinalma ? 'İrsaliye Arşivi' : 'Fatura Arşivi'}
@@ -157,15 +173,28 @@ export default function InvoiceArchiveScreen() {
                     <table className="w-full text-left text-sm">
                         <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
                             <tr>
-                                <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center">Şirket/Firma</th>
-                                <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center">
-                                    {isSatinalma ? 'İrsaliye No' : isMuhasebe ? 'Fatura No' : 'Belge No'}
+                                <th onClick={() => handleSort('id')} className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 group whitespace-nowrap">
+                                    <div className="flex items-center justify-center">Sıra No <SortIcon columnKey="id" /></div>
                                 </th>
-                                <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center">
-                                    {isSatinalma ? 'İrsaliye Tarihi' : isMuhasebe ? 'Fatura Tarihi' : 'Belge Tarihi'}
+                                <th onClick={() => handleSort('company_name')} className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 group whitespace-nowrap">
+                                    <div className="flex items-center justify-center">Şirket/Firma <SortIcon columnKey="company_name" /></div>
                                 </th>
-                                <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center">Yükleme Tarihi</th>
-                                <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center">Onay Tarihi</th>
+                                <th onClick={() => handleSort('invoice_no')} className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 group whitespace-nowrap">
+                                    <div className="flex items-center justify-center">
+                                        {isSatinalma ? 'İrsaliye No' : isMuhasebe ? 'Fatura No' : 'Belge No'} <SortIcon columnKey="invoice_no" />
+                                    </div>
+                                </th>
+                                <th onClick={() => handleSort('submission_date')} className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 group whitespace-nowrap">
+                                    <div className="flex items-center justify-center">
+                                        {isSatinalma ? 'İrsaliye Tarihi' : isMuhasebe ? 'Fatura Tarihi' : 'Belge Tarihi'} <SortIcon columnKey="submission_date" />
+                                    </div>
+                                </th>
+                                <th onClick={() => handleSort('created_at')} className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 group whitespace-nowrap">
+                                    <div className="flex items-center justify-center">Yükleme Tarihi <SortIcon columnKey="created_at" /></div>
+                                </th>
+                                <th onClick={() => handleSort('approved_at')} className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 group whitespace-nowrap">
+                                    <div className="flex items-center justify-center">Onay Tarihi <SortIcon columnKey="approved_at" /></div>
+                                </th>
                                 <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center">Durum</th>
                                 <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center">İşlem</th>
                             </tr>
@@ -189,8 +218,9 @@ export default function InvoiceArchiveScreen() {
                                     </td>
                                 </tr>
                             ) : (
-                                filteredInvoices.map((invoice) => (
+                                filteredInvoices.map((invoice, index) => (
                                     <tr key={invoice.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                        <td className="px-6 py-4 font-medium text-slate-500 dark:text-slate-400 text-center">{index + 1}</td>
                                         <td className="px-6 py-4 font-medium text-slate-900 dark:text-white text-left">
                                             {invoice.company_name || <span className="text-slate-400 italic">Bilinmiyor</span>}
                                         </td>

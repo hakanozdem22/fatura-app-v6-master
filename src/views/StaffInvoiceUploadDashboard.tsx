@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabaseClient';
 import { FileUp, Loader2, CheckCircle2, AlertCircle, ChevronDown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { logAction } from '../lib/logger';
-import { PDFDocument } from 'pdf-lib';
+
 
 interface Invoice {
     id: string;
@@ -117,7 +117,6 @@ export default function StaffInvoiceUploadDashboard() {
     const [pendingInvoiceData, setPendingInvoiceData] = useState<Omit<Invoice, 'id'> | null>(null);
     const [previewFileUrl, setPreviewFileUrl] = useState<string | null>(null);
     const [previewFileType, setPreviewFileType] = useState<string | null>(null);
-    const [pageCount, setPageCount] = useState<number>(1);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -218,19 +217,6 @@ export default function StaffInvoiceUploadDashboard() {
             setPreviewFileUrl(URL.createObjectURL(file));
             setPreviewFileType(file.type);
 
-            // PDF sayfa sayısını öğren
-            if (file.type === 'application/pdf') {
-                try {
-                    const arrayBuffer = await file.arrayBuffer();
-                    const pdfDoc = await PDFDocument.load(arrayBuffer);
-                    setPageCount(pdfDoc.getPageCount());
-                } catch (e) {
-                    console.error("PDF sayfa sayısı okunamadı:", e);
-                    setPageCount(1);
-                }
-            } else {
-                setPageCount(1);
-            }
 
             setShowPreviewModal(true);
 
@@ -295,8 +281,11 @@ export default function StaffInvoiceUploadDashboard() {
             await logAction(
                 user?.email,
                 'Belge Yükleme',
-                `${pendingInvoiceData.document_type} yüklendi: ${pendingInvoiceData.invoice_no} (${pendingInvoiceData.company_name})`
+                `${pendingInvoiceData.document_type} yüklendi: ${pendingInvoiceData.invoice_no} (${pendingInvoiceData.company_name})`,
+                undefined
             );
+
+
 
             setPendingInvoiceData(null);
         } catch (error: unknown) {
@@ -387,37 +376,26 @@ export default function StaffInvoiceUploadDashboard() {
             {/* Modal: PDF ve OCR Önizleme Onayı */}
             {showPreviewModal && pendingInvoiceData && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#020617]/90 backdrop-blur-md p-0 sm:p-4">
-                    <div className="w-full max-w-7xl h-full sm:h-[90vh] flex flex-col md:flex-row rounded-none sm:rounded-2xl bg-[#0f172a] shadow-2xl border border-slate-800 overflow-hidden text-white/90 font-sans tracking-tight">
+                    <div className="w-full max-w-7xl h-full sm:h-[90vh] flex flex-col md:flex-row rounded-none sm:rounded-2xl bg-[#0f172a] shadow-2xl border border-slate-800 overflow-y-auto md:overflow-hidden text-white/90 font-sans tracking-tight">
 
                         {/* Sol Taraf: Medya Önizleme */}
-                        <div className="w-full md:w-[65%] bg-[#020617] flex flex-col border-r border-slate-800/50">
-                            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800/50 bg-[#0f172a]/30">
-                                <h3 className="text-sm font-bold text-slate-400 flex items-center gap-3 uppercase tracking-widest">
-                                    <span className="material-symbols-outlined text-sm">filter_center_focus</span> Orijinal Belge
-                                </h3>
-                                <div className="flex items-center gap-2 bg-[#1e293b] rounded-lg p-1 px-3 border border-slate-700">
-                                    <span className="text-xs font-mono text-slate-400">1 / {pageCount}</span>
-                                    <div className="w-[1px] h-3 bg-slate-700 mx-2"></div>
-                                    <div className="flex gap-4">
-                                        <span className="material-symbols-outlined text-[18px] cursor-pointer hover:text-white transition">remove</span>
-                                        <span className="material-symbols-outlined text-[18px] cursor-pointer hover:text-white transition">add</span>
-                                    </div>
-                                </div>
-                            </div>
+                        <div className="w-full md:w-[65%] bg-[#020617] flex flex-col border-r border-slate-800/50 min-h-[60vh] md:h-full">
 
-                            <div className="flex-1 overflow-hidden flex justify-center items-center p-8">
-                                <div className="w-full h-full bg-slate-900/50 rounded-xl border border-slate-800/50 overflow-hidden shadow-2xl relative group">
+                            <div className="flex-1 overflow-hidden flex justify-center items-stretch p-0 bg-slate-950">
+                                <div className="w-full h-full bg-slate-900/50 shadow-2xl relative group">
                                     {previewFileType?.includes('pdf') ? (
-                                        <iframe src={previewFileUrl || ''} className="w-full h-[800px] border-none filter invert-[0.05]" />
+                                        <iframe src={previewFileUrl || ''} className="w-full h-full border-none filter invert-[0.05]" />
                                     ) : (
-                                        <img src={previewFileUrl || ''} alt="Belge" className="max-w-full max-h-full object-contain mx-auto transition-transform duration-500" />
+                                        <div className="w-full h-full overflow-auto p-4 sm:p-8 flex justify-center items-start">
+                                            <img src={previewFileUrl || ''} alt="Belge" className="max-w-full h-auto object-contain transition-transform duration-500 shadow-2xl" />
+                                        </div>
                                     )}
                                 </div>
                             </div>
                         </div>
 
                         {/* Sağ Taraf: Detaylar ve Form */}
-                        <div className="w-full md:w-[35%] flex flex-col bg-[#0f172a] overflow-y-auto">
+                        <div className="w-full md:w-[35%] flex flex-col bg-[#0f172a] overflow-y-auto md:h-full min-h-[400px]">
                             <div className="p-5 flex flex-col gap-4 flex-1">
 
                                 {/* Başlık Bölümü */}

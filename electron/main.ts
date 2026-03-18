@@ -20,9 +20,9 @@ autoUpdater.autoInstallOnAppQuit = true;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 1500,
+    width: 1550,
     height: 900,
-    minWidth: 1500,
+    minWidth: 1550,
     minHeight: 900,
     autoHideMenuBar: true,
     titleBarStyle: 'hidden',

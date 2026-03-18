@@ -1,6 +1,8 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+
 import logo from '../assets/logo.png';
+import pkg from '../../package.json';
 
 interface SidebarProps {
     isCollapsed?: boolean;
@@ -41,12 +43,8 @@ export default function Sidebar({ isCollapsed = false, toggleSidebar }: SidebarP
             icon: 'inventory_2',
             roles: ['muhasebe', 'satinalma']
         },
-        {
-            name: 'Reddedilenler',
-            path: '/rejected-documents',
-            icon: 'hide_source',
-            roles: ['muhasebe', 'satinalma', 'manager', 'yonetici']
-        },
+        { name: 'Reddedilenler', path: '/rejected-documents', icon: 'hide_source', roles: ['muhasebe', 'satinalma', 'manager', 'yonetici'] },
+
         { name: 'Sistem Kayıtları', path: '/system-logs', icon: 'manage_search', roles: ['admin', 'manager', 'yonetici'] },
         { name: 'Ayarlar', path: '/settings', icon: 'settings', roles: ['admin', 'manager', 'yonetici', 'user', 'fatura sorumlusu', 'fatura_sorumlusu', 'muhasebe', 'satinalma', 'irsaliye', 'fatura_irsaliye'] },
     ];
@@ -62,6 +60,7 @@ export default function Sidebar({ isCollapsed = false, toggleSidebar }: SidebarP
                         <h1 className="font-bold text-base text-slate-900 dark:text-white leading-tight truncate">
                             Ardıç Elektrik<br /><span className="text-sm font-medium">Entegrasyon Sistemi</span>
                         </h1>
+                        <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mt-0.5 tracking-wider">v{pkg.version}</p>
                     </div>
                 )}
                 {toggleSidebar && (
@@ -98,7 +97,11 @@ export default function Sidebar({ isCollapsed = false, toggleSidebar }: SidebarP
                                 <span className={`material-symbols-outlined ${isActive ? 'fill-1' : 'group-hover:text-primary'} shrink-0`}>
                                     {item.icon}
                                 </span>
-                                {!isCollapsed && <span className="font-medium text-sm leading-tight">{item.name}</span>}
+                                {!isCollapsed && (
+                                    <div className="flex-1 flex items-center justify-between">
+                                        <span className="font-medium text-sm leading-tight">{item.name}</span>
+                                    </div>
+                                )}
                             </Link>
                         );
                     })}

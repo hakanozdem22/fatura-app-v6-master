@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabaseClient';
 import { Loader2, Search, FileText, XCircle, CheckCircle2, RotateCcw, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { logAction } from '../lib/logger';
+
 import { PDFDocument } from 'pdf-lib';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -20,6 +21,7 @@ interface Invoice {
     approved_at?: string;
     rejection_note?: string;
     rejected_by_id?: string;
+    user_id?: string;
 }
 
 const getRoleTitle = (role: string = '') => {
@@ -140,7 +142,15 @@ export default function RejectedDocumentsScreen() {
 
                             const paddingX = 40;
                             const paddingY = 40;
-                            const posX = paddingX;
+                            const role = (profile?.role || '').toLowerCase().trim();
+
+                            let posX = paddingX; // Default: Sol (Muhasebe/Satınalma)
+                            if (role === 'yonetici') {
+                                posX = (width - stampWidth) / 2; // Orta
+                            } else if (role === 'manager') {
+                                posX = Math.max(0, width - stampWidth - paddingX); // Sağ
+                            }
+
                             const posY = paddingY;
 
                             firstPage.drawImage(stampImage, {
@@ -198,8 +208,18 @@ export default function RejectedDocumentsScreen() {
                             const scale = maxStampWidth / stampImg.width;
                             const sWidth = stampImg.width * scale;
                             const sHeight = stampImg.height * scale;
-                            const x = bgImg.width * 0.05;
-                            const y = bgImg.height - sHeight - (bgImg.height * 0.05);
+                            const role = (profile?.role || '').toLowerCase().trim();
+                            const paddingX = bgImg.width * 0.05;
+                            const paddingY = bgImg.height * 0.05;
+
+                            let x = paddingX; // Default: Sol
+                            if (role === 'yonetici') {
+                                x = (bgImg.width - sWidth) / 2; // Orta
+                            } else if (role === 'manager') {
+                                x = bgImg.width - sWidth - paddingX; // Sağ
+                            }
+
+                            const y = bgImg.height - sHeight - paddingY;
 
                             ctx.drawImage(stampImg, x, y, sWidth, sHeight);
                             const blob: Blob = await new Promise((resolve) => canvas.toBlob((b) => resolve(b!), 'image/jpeg', 0.9));
@@ -227,8 +247,9 @@ export default function RejectedDocumentsScreen() {
             const { error } = await supabase
                 .from('invoices')
                 .update({
-                    status: 'Onaylandı',
+                    status: 'Müdür Onaylı',
                     file_url: finalFileUrl,
+                    approved_by: user?.id,
                     approved_at: new Date().toISOString(),
                     rejection_note: null
                 })
@@ -237,11 +258,13 @@ export default function RejectedDocumentsScreen() {
             if (error) throw error;
 
             await logAction(
-                profile?.full_name || 'Bilinmiyor',
+                user?.email || 'unknown',
                 'INVOICE_RE_APPROVED',
                 `${invoice.invoice_no} numaralı belge hatalı red sonrası yeniden onaylandı.`,
                 { invoice_id: invoice.id, invoice_no: invoice.invoice_no }
             );
+
+
 
             setConfirmModal({ show: false, invoice: null });
             setSelectedInvoice(null);

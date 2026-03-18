@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabaseClient';
 import { Loader2, CheckCircle2, Search, Trash2, AlertTriangle, X, FileText } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { logAction } from '../lib/logger';
+
 import { v4 as uuidv4 } from 'uuid';
 import { PDFDocument } from 'pdf-lib';
 
@@ -16,6 +17,7 @@ interface Invoice {
     file_url?: string;
     document_type?: string;
     approved_at?: string;
+    user_id?: string;
     created_at?: string;
     rejection_note?: string;
 }
@@ -221,8 +223,11 @@ export default function ApprovedInvoicesScreen() {
             await logAction(
                 user?.email,
                 isSatinalma ? 'Satınalma Onayı' : 'Muhasebe Onayı',
-                `${selectedInvoice.document_type || 'Belge'} #${selectedInvoice.invoice_no} ${isSatinalma ? 'satınalma' : 'muhasebe'} tarafından onaylandı`
+                `${selectedInvoice.document_type || 'Belge'} #${selectedInvoice.invoice_no} ${isSatinalma ? 'satınalma' : 'muhasebe'} tarafından onaylandı`,
+                undefined
             );
+
+
 
             fetchApprovedInvoices();
             setTimeout(() => setSelectedInvoice(null), 1500);
@@ -355,8 +360,11 @@ export default function ApprovedInvoicesScreen() {
             await logAction(
                 user?.email,
                 isSatinalma ? 'Satınalma Reddi' : 'Muhasebe Reddi',
-                `${selectedInvoice.document_type || 'Belge'} #${selectedInvoice.invoice_no} ${isSatinalma ? 'satınalma' : 'muhasebe'} tarafından reddedildi. Sebep: ${rejectNote}`
+                `${selectedInvoice.document_type || 'Belge'} #${selectedInvoice.invoice_no} ${isSatinalma ? 'satınalma' : 'muhasebe'} tarafından reddedildi. Sebep: ${rejectNote}`,
+                undefined
             );
+
+
 
             fetchApprovedInvoices();
             setTimeout(() => {
@@ -423,7 +431,7 @@ export default function ApprovedInvoicesScreen() {
     );
 
     return (
-        <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-8 p-8">
+        <div className="mx-auto flex w-full max-w-[1450px] flex-col gap-8 p-8">
             <header className="flex flex-col gap-1">
                 <h2 className="text-3xl font-bold text-slate-900 dark:text-white">
                     {isMuhasebe ? 'Alım Onaylı Faturalar' : isSatinalma ? 'Müdür Onaylı İrsaliyeler' : 'Onaylanan Belgeler'}

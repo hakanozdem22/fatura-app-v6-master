@@ -8,6 +8,7 @@ const UpdateModal: React.FC = () => {
 
     useEffect(() => {
         const api = window.electronAPI;
+        if (!api) return; // Electron dışında (tarayıcıda) çalışıyorsak erken çık
 
         api.onUpdateMessage((msg: string) => {
             setMessage(msg);

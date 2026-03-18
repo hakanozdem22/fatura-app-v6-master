@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabaseClient';
 import { Loader2, CheckCircle2, AlertCircle, XCircle, Search, X, Clock } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { logAction } from '../lib/logger';
+
 import { PDFDocument } from 'pdf-lib';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -16,6 +17,7 @@ interface Invoice {
   file_url?: string;
   document_type?: string;
   assigned_manager_id?: string;
+  user_id?: string;
   created_at?: string;
   approved_at?: string;
   uploader?: {
@@ -128,8 +130,11 @@ export default function ManagerApprovalWorkspace() {
               const stampHeight = stampImage.height * scaleFactor;
               const paddingX = 40;
               const paddingY = 40;
-              const safeX = Math.max(0, width - stampWidth - paddingX);
-              const safeY = Math.max(0, paddingY);
+              let safeX = Math.max(0, width - stampWidth - paddingX); // Default: Right (Manager)
+              if (profile?.role === 'yonetici') {
+                safeX = (width - stampWidth) / 2; // Center (Yonetici)
+              }
+              const safeY = paddingY;
               firstPage.drawImage(stampImage, {
                 x: safeX,
                 y: safeY,
@@ -186,7 +191,7 @@ export default function ManagerApprovalWorkspace() {
               const paddingX = bgImg.width * 0.05;
               const paddingY = bgImg.height * 0.05;
 
-              let x = bgImg.width - sWidth - paddingX; // Default: Right (Manager)
+              let x = bgImg.width - sWidth - paddingX; // Right (Manager)
 
               if (profile?.role === 'yonetici') {
                 x = (bgImg.width - sWidth) / 2; // Center (Yonetici)
@@ -245,8 +250,11 @@ export default function ManagerApprovalWorkspace() {
       await logAction(
         user?.email,
         'Belge Onaylama',
-        `${selectedInvoice.document_type || 'Belge'} #${selectedInvoice.invoice_no} onaylandı`
+        `${selectedInvoice.document_type || 'Belge'} #${selectedInvoice.invoice_no} onaylandı`,
+        undefined
       );
+
+
 
       setSelectedInvoice(null);
       await fetchPendingInvoices();
@@ -298,8 +306,11 @@ export default function ManagerApprovalWorkspace() {
               const stampHeight = stampImage.height * scaleFactor;
               const paddingX = 40;
               const paddingY = 40;
-              const safeX = Math.max(0, width - stampWidth - paddingX);
-              const safeY = Math.max(0, paddingY);
+              let safeX = Math.max(0, width - stampWidth - paddingX); // Default: Right (Manager)
+              if (profile?.role === 'yonetici') {
+                safeX = (width - stampWidth) / 2; // Center (Yonetici)
+              }
+              const safeY = paddingY;
               firstPage.drawImage(stampImage, {
                 x: safeX,
                 y: safeY,
@@ -399,8 +410,11 @@ export default function ManagerApprovalWorkspace() {
       await logAction(
         user?.email,
         'Belge Reddetme',
-        `${selectedInvoice.document_type || 'Belge'} #${selectedInvoice.invoice_no} reddedildi. Not: ${rejectNote || 'Belirtilmedi'}`
+        `${selectedInvoice.document_type || 'Belge'} #${selectedInvoice.invoice_no} reddedildi. Not: ${rejectNote || 'Belirtilmedi'}`,
+        undefined
       );
+
+
 
       setRejectNote('');
       setSelectedInvoice(null);
@@ -440,8 +454,11 @@ export default function ManagerApprovalWorkspace() {
       await logAction(
         user?.email,
         'Yönetici Onay ve Yönlendirme',
-        `#${forwardingInvoice.invoice_no} onaylandı ve müdüre yönlendirildi.`
+        `#${forwardingInvoice.invoice_no} onaylandı ve müdüre yönlendirildi.`,
+        undefined
       );
+
+
 
       setShowForwardModal(false);
       setForwardingInvoice(null);
