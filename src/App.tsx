@@ -1,5 +1,6 @@
 import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
+import { Toaster, toast } from 'react-hot-toast';
 import { supabase } from './lib/supabaseClient';
 import Layout from './components/Layout';
 import EmailRecipientsManagementScreen from './views/EmailRecipientsManagementScreen';
@@ -134,10 +135,10 @@ function DesktopNotificationListener() {
   const { user } = useAuth();
 
   useEffect(() => {
-    // Bildirim izni iste
-    if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
-      Notification.requestPermission();
-    }
+    // Bildirim izni isteme kodunu devre dışı bırakıyoruz (Yerel Windows bildirimi yerine in-app Toast kullanıyoruz)
+    // if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+    //   Notification.requestPermission();
+    // }
 
     if (user?.id) {
       const channel = supabase
@@ -149,12 +150,15 @@ function DesktopNotificationListener() {
           filter: `user_id=eq.${user.id}`
         }, (payload) => {
           const newNotif = payload.new;
-          if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-            new Notification(newNotif.title, {
-              body: newNotif.message,
-              icon: '/logo.png'
-            });
-          }
+          // Yerel Notification (OS) yerine in-app Toast (react-hot-toast) kullanımı.
+          // Böylece yazı alanlarındaki odak çalınmaz.
+          toast.success(
+            <div className="flex flex-col gap-1 text-sm">
+              <span className="font-bold text-gray-800 dark:text-gray-100">{newNotif.title}</span>
+              <span className="text-gray-600 dark:text-gray-300 leading-snug">{newNotif.message}</span>
+            </div>,
+            { duration: 5000 }
+          );
         })
         .subscribe();
 
@@ -171,6 +175,7 @@ export default function App() {
   return (
     <AuthProvider>
       <HashRouter>
+        <Toaster position="top-right" />
         <DesktopNotificationListener />
         <AppRoutes />
       </HashRouter>

@@ -1,7 +1,7 @@
 {
   "name": "fatura-app",
   "private": true,
-  "version": "7.3.3",
+  "version": "7.3.4",
   "type": "module",
   "main": "dist-electron/main.js",
   "scripts": {
@@ -53,6 +53,7 @@
     "pdfjs-dist": "^5.4.624",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-hot-toast": "^2.6.0",
     "react-router-dom": "^7.13.0",
     "tesseract.js": "^7.0.0",
     "uuid": "^13.0.0"
