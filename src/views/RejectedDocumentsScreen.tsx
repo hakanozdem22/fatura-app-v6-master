@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabaseClient';
 import { Loader2, Search, FileText, XCircle, CheckCircle2, RotateCcw, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { logAction } from '../lib/logger';
+import { sendNotification } from '../lib/notificationService';
 
 import { PDFDocument } from 'pdf-lib';
 import { v4 as uuidv4 } from 'uuid';
@@ -264,7 +265,15 @@ export default function RejectedDocumentsScreen() {
                 { invoice_id: invoice.id, invoice_no: invoice.invoice_no }
             );
 
-
+            // BİLDİRİM GÖNDER (Yükleyen Personele)
+            if (invoice.user_id) {
+                await sendNotification({
+                    user_id: invoice.user_id,
+                    title: `Belgeniz Yeniden Onaylandı`,
+                    message: `${invoice.invoice_no} nolu ${new Date(invoice.submission_date).toLocaleDateString('tr-TR')} tarihli belgeniz ${profile?.full_name} tarafından yeniden onaylanarak arşive çekildi.`,
+                    source_id: invoice.id
+                });
+            }
 
             setConfirmModal({ show: false, invoice: null });
             setSelectedInvoice(null);

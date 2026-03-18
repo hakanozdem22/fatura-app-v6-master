@@ -1,4 +1,6 @@
 import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
+import { supabase } from './lib/supabaseClient';
 import Layout from './components/Layout';
 import EmailRecipientsManagementScreen from './views/EmailRecipientsManagementScreen';
 import ManagerApprovalWorkspace from './views/ManagerApprovalWorkspace';
@@ -12,6 +14,7 @@ import MyInvoicesScreen from './views/MyInvoicesScreen';
 import SettingsScreen from './views/SettingsScreen';
 import InvoiceArchiveScreen from './views/InvoiceArchiveScreen';
 import RejectedDocumentsScreen from './views/RejectedDocumentsScreen';
+import NotificationsScreen from './views/NotificationsScreen';
 
 import UpdateModal from './components/UpdateModal';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -107,6 +110,12 @@ function AppRoutes() {
           </ProtectedRoute>
         } />
 
+        <Route path="notifications" element={
+          <ProtectedRoute>
+            <NotificationsScreen />
+          </ProtectedRoute>
+        } />
+
         <Route path="settings" element={
           <ProtectedRoute>
             <SettingsScreen />
@@ -120,10 +129,49 @@ function AppRoutes() {
 
 
 
+// Masaüstü bildirimlerini dinleyen bileşen (AuthProvider İÇİNDE render edilmeli)
+function DesktopNotificationListener() {
+  const { user } = useAuth();
+
+  useEffect(() => {
+    // Bildirim izni iste
+    if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+
+    if (user?.id) {
+      const channel = supabase
+        .channel('desktop_notifications')
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`
+        }, (payload) => {
+          const newNotif = payload.new;
+          if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+            new Notification(newNotif.title, {
+              body: newNotif.message,
+              icon: '/logo.png'
+            });
+          }
+        })
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [user?.id]);
+
+  return null;
+}
+
 export default function App() {
   return (
     <AuthProvider>
       <HashRouter>
+        <DesktopNotificationListener />
         <AppRoutes />
       </HashRouter>
       <UpdateModal />

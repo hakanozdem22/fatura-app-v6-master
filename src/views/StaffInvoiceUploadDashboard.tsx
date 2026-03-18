@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabaseClient';
 import { FileUp, Loader2, CheckCircle2, AlertCircle, ChevronDown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { logAction } from '../lib/logger';
-
+import { sendNotification } from '../lib/notificationService';
 
 interface Invoice {
     id: string;
@@ -262,12 +262,14 @@ export default function StaffInvoiceUploadDashboard() {
             const [day, month, year] = pendingInvoiceData.submission_date.split('.');
             const dbDate = `${year}-${month}-${day}`;
 
-            const { error: dbError } = await supabase
+            const { data, error: dbError } = await supabase
                 .from('invoices')
                 .insert([{
                     ...pendingInvoiceData,
                     submission_date: dbDate // Veritabanı formatına dönüştürülen tarih
-                }]);
+                }])
+                .select()
+                .single();
 
             if (dbError) {
                 console.error("Veritabanı kayıt hatası:", dbError);
@@ -285,7 +287,15 @@ export default function StaffInvoiceUploadDashboard() {
                 undefined
             );
 
-
+            // BİLDİRİM GÖNDER (Seçilen Yöneticiye)
+            if (pendingInvoiceData.assigned_manager_id) {
+                await sendNotification({
+                    user_id: pendingInvoiceData.assigned_manager_id,
+                    title: `Yeni ${pendingInvoiceData.document_type} Onay Bekliyor`,
+                    message: `${pendingInvoiceData.invoice_no} nolu ${new Date(pendingInvoiceData.submission_date).toLocaleDateString('tr-TR')} tarihli ${pendingInvoiceData.document_type.toLowerCase()} onayınız için ${profile?.full_name} tarafından sisteme yüklendi.`,
+                    source_id: data.id
+                });
+            }
 
             setPendingInvoiceData(null);
         } catch (error: unknown) {

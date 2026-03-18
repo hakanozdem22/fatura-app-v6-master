@@ -1,5 +1,8 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '../lib/supabaseClient';
+import { getUnreadCount } from '../lib/notificationService';
 
 import logo from '../assets/logo.png';
 import pkg from '../../package.json';
@@ -12,6 +15,49 @@ interface SidebarProps {
 export default function Sidebar({ isCollapsed = false, toggleSidebar }: SidebarProps) {
     const location = useLocation();
     const { user, profile, signOut } = useAuth();
+    const userId = user?.id;
+    const [unreadNotifications, setUnreadNotifications] = useState(0);
+
+    const fetchUnreadCount = useCallback(async () => {
+        if (userId) {
+            const { count } = await getUnreadCount(userId);
+            setUnreadNotifications(count);
+        }
+    }, [userId]);
+
+    useEffect(() => {
+        let mounted = true;
+
+        if (userId) {
+            const init = async () => {
+                const { count } = await getUnreadCount(userId);
+                if (mounted) setUnreadNotifications(count);
+            };
+            init();
+
+            // Her 30 saniyede bir kontrol et (Fallback)
+            const interval = setInterval(fetchUnreadCount, 30000);
+
+            // Realtime dinleme
+            const channel = supabase
+                .channel('sidebar_notifications_changes')
+                .on('postgres_changes', {
+                    event: '*',
+                    schema: 'public',
+                    table: 'notifications',
+                    filter: `user_id=eq.${userId}`
+                }, () => {
+                    if (mounted) fetchUnreadCount();
+                })
+                .subscribe();
+
+            return () => {
+                mounted = false;
+                clearInterval(interval);
+                supabase.removeChannel(channel);
+            };
+        }
+    }, [userId, fetchUnreadCount]);
 
     // Rolü normalize et
     const rawRole = profile?.role || 'user';
@@ -44,6 +90,7 @@ export default function Sidebar({ isCollapsed = false, toggleSidebar }: SidebarP
             roles: ['muhasebe', 'satinalma']
         },
         { name: 'Reddedilenler', path: '/rejected-documents', icon: 'hide_source', roles: ['muhasebe', 'satinalma', 'manager', 'yonetici'] },
+        { name: 'Bildirimlerim', path: '/notifications', icon: 'notifications', roles: [], badge: unreadNotifications },
 
         { name: 'Sistem Kayıtları', path: '/system-logs', icon: 'manage_search', roles: ['admin', 'manager', 'yonetici'] },
         { name: 'Ayarlar', path: '/settings', icon: 'settings', roles: ['admin', 'manager', 'yonetici', 'user', 'fatura sorumlusu', 'fatura_sorumlusu', 'muhasebe', 'satinalma', 'irsaliye', 'fatura_irsaliye'] },
@@ -78,8 +125,8 @@ export default function Sidebar({ isCollapsed = false, toggleSidebar }: SidebarP
             <nav className={`flex-1 ${isCollapsed ? 'px-2' : 'px-4'} py-4 space-y-1 overflow-y-auto`}>
                 {navItems
                     .filter(item => {
-                        if (!item.roles) return true;
-                        // Use original case-insensitive some or the new normalized role
+                        // Eğer roles boş dizi ise herkese göster
+                        if (!item.roles || item.roles.length === 0) return true;
                         return item.roles.some(r => r.toLowerCase() === currentRole);
                     })
                     .map((item) => {
@@ -100,6 +147,11 @@ export default function Sidebar({ isCollapsed = false, toggleSidebar }: SidebarP
                                 {!isCollapsed && (
                                     <div className="flex-1 flex items-center justify-between">
                                         <span className="font-medium text-sm leading-tight">{item.name}</span>
+                                        {item.badge !== undefined && (
+                                            <span className={`flex items-center justify-center min-w-[20px] h-5 px-1 rounded-full text-[10px] font-bold ${item.badge > 0 ? 'bg-primary text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-500'}`}>
+                                                {item.badge}
+                                            </span>
+                                        )}
                                     </div>
                                 )}
                             </Link>

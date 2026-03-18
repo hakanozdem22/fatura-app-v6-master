@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabaseClient';
 import { Loader2, CheckCircle2, AlertCircle, XCircle, Search, X, Clock } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { logAction } from '../lib/logger';
-
+import { sendNotification } from '../lib/notificationService';
 import { PDFDocument } from 'pdf-lib';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -254,7 +254,15 @@ export default function ManagerApprovalWorkspace() {
         undefined
       );
 
-
+      // BİLDİRİM GÖNDER (Yükleyen Personele)
+      if (selectedInvoice.user_id) {
+        await sendNotification({
+          user_id: selectedInvoice.user_id,
+          title: `Belgeniz Onaylandı (${profile?.role === 'yonetici' ? 'Yönetici' : 'Müdür'})`,
+          message: `${selectedInvoice.invoice_no} nolu ${new Date(selectedInvoice.submission_date).toLocaleDateString('tr-TR')} tarihli ${selectedInvoice.document_type?.toLowerCase()} ${profile?.role === 'yonetici' ? 'yönetici' : 'müdürü'} ${profile?.full_name} tarafından onaylandı.`,
+          source_id: selectedInvoice.id
+        });
+      }
 
       setSelectedInvoice(null);
       await fetchPendingInvoices();
@@ -414,7 +422,15 @@ export default function ManagerApprovalWorkspace() {
         undefined
       );
 
-
+      // BİLDİRİM GÖNDER (Yükleyen Personele)
+      if (selectedInvoice.user_id) {
+        await sendNotification({
+          user_id: selectedInvoice.user_id,
+          title: `Belgeniz Reddedildi`,
+          message: `${selectedInvoice.invoice_no} nolu ${new Date(selectedInvoice.submission_date).toLocaleDateString('tr-TR')} tarihli ${selectedInvoice.document_type?.toLowerCase()} reddedildi. Sebep: ${rejectNote || 'Belirtilmedi'}`,
+          source_id: selectedInvoice.id
+        });
+      }
 
       setRejectNote('');
       setSelectedInvoice(null);
@@ -458,7 +474,15 @@ export default function ManagerApprovalWorkspace() {
         undefined
       );
 
-
+      // BİLDİRİM GÖNDER (Seçilen Müdüre)
+      if (selectedForwardManagerId) {
+        await sendNotification({
+          user_id: selectedForwardManagerId,
+          title: `Onay Bekleyen Belge (Yönlendirildi)`,
+          message: `${forwardingInvoice.invoice_no} nolu ${new Date(forwardingInvoice.submission_date).toLocaleDateString('tr-TR')} tarihli belge yönetici ${profile?.full_name} tarafından onaylanarak size yönlendirildi.`,
+          source_id: forwardingInvoice.id
+        });
+      }
 
       setShowForwardModal(false);
       setForwardingInvoice(null);

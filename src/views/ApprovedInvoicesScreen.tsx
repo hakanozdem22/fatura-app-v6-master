@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabaseClient';
 import { Loader2, CheckCircle2, Search, Trash2, AlertTriangle, X, FileText } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { logAction } from '../lib/logger';
+import { sendNotification } from '../lib/notificationService';
 
 import { v4 as uuidv4 } from 'uuid';
 import { PDFDocument } from 'pdf-lib';
@@ -20,6 +21,7 @@ interface Invoice {
     user_id?: string;
     created_at?: string;
     rejection_note?: string;
+    assigned_manager_id?: string;
 }
 
 export default function ApprovedInvoicesScreen() {
@@ -227,7 +229,25 @@ export default function ApprovedInvoicesScreen() {
                 undefined
             );
 
+            // BİLDİRİM GÖNDER (Yükleyen Personele)
+            if (selectedInvoice.user_id) {
+                await sendNotification({
+                    user_id: selectedInvoice.user_id,
+                    title: `Belgeniz Nihai Onay Aldı (${isSatinalma ? 'Satın Alma' : 'Muhasebe'})`,
+                    message: `${selectedInvoice.invoice_no} nolu ${new Date(selectedInvoice.submission_date).toLocaleDateString('tr-TR')} tarihli ${selectedInvoice.document_type?.toLowerCase()} ${isSatinalma ? 'Satın Alma' : 'Muhasebe'} birimi tarafındanda onaylanarak süreç tamamlandı.`,
+                    source_id: selectedInvoice.id
+                });
+            }
 
+            // BİLDİRİM GÖNDER (Müdüre/Yöneticiye - eğer yükleyici değilse)
+            if (selectedInvoice.assigned_manager_id && selectedInvoice.assigned_manager_id !== selectedInvoice.user_id) {
+                await sendNotification({
+                    user_id: selectedInvoice.assigned_manager_id,
+                    title: `Onayladığınız Belge Nihai Onay Aldı`,
+                    message: `${selectedInvoice.invoice_no} nolu belge ${isSatinalma ? 'Satın Alma' : 'Muhasebe'} birimi tarafından onaylanarak arşivlendi.`,
+                    source_id: selectedInvoice.id
+                });
+            }
 
             fetchApprovedInvoices();
             setTimeout(() => setSelectedInvoice(null), 1500);
@@ -364,7 +384,25 @@ export default function ApprovedInvoicesScreen() {
                 undefined
             );
 
+            // BİLDİRİM GÖNDER (Yükleyen Personele)
+            if (selectedInvoice.user_id) {
+                await sendNotification({
+                    user_id: selectedInvoice.user_id,
+                    title: `Belgeniz Reddedildi (${isSatinalma ? 'Satın Alma' : 'Muhasebe'})`,
+                    message: `${selectedInvoice.invoice_no} nolu ${new Date(selectedInvoice.submission_date).toLocaleDateString('tr-TR')} tarihli ${selectedInvoice.document_type?.toLowerCase()} ${isSatinalma ? 'Satın Alma' : 'Muhasebe'} birimi tarafından reddedildi. Sebep: ${rejectNote}`,
+                    source_id: selectedInvoice.id
+                });
+            }
 
+            // BİLDİRİM GÖNDER (Müdüre/Yöneticiye)
+            if (selectedInvoice.assigned_manager_id && selectedInvoice.assigned_manager_id !== selectedInvoice.user_id) {
+                await sendNotification({
+                    user_id: selectedInvoice.assigned_manager_id,
+                    title: `Onayladığınız Belge Reddedildi`,
+                    message: `${selectedInvoice.invoice_no} nolu belge ${isSatinalma ? 'Satın Alma' : 'Muhasebe'} birimi tarafından reddedildi. Sebep: ${rejectNote}`,
+                    source_id: selectedInvoice.id
+                });
+            }
 
             fetchApprovedInvoices();
             setTimeout(() => {
