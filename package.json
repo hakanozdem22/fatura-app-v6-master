@@ -10,7 +10,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "electron:dev": "concurrently -k \"cross-env NODE_ENV=development vite\" \"tsc -p tsconfig.electron.json -w\" \"wait-on tcp:5173 && node -e \\\"const fs = require('fs'); if (!fs.existsSync('dist-electron')) fs.mkdirSync('dist-electron'); fs.writeFileSync('dist-electron/package.json', '{\\\\\\\"type\\\\\\\":\\\\\\\"commonjs\\\\\\\"}');\\\" && electron .\"",
-    "electron:build": "npm run build && node -e \"require('fs').writeFileSync('dist-electron/package.json', '{\\\"type\\\":\\\"commonjs\\\"}');\" && electron-builder"
+    "electron:build": "npm run build && node -e \"require('fs').writeFileSync('dist-electron/package.json', '{\\\"type\\\":\\\"commonjs\\\"}');\" && electron-builder",
+    "electron:build:publish": "npm run build && node -e \"require('fs').writeFileSync('dist-electron/package.json', '{\\\"type\\\":\\\"commonjs\\\"}');\" && electron-builder --publish always"
   },
   "build": {
     "appId": "com.faturaapp",
