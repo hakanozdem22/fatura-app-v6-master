@@ -1,13 +1,13 @@
 import { useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
-import { Loader2, UploadCloud, CheckCircle2, Moon, Sun, Trash2 } from 'lucide-react';
+import { Loader2, UploadCloud, CheckCircle2, Moon, Sun, Trash2, MonitorSmartphone } from 'lucide-react';
 import { logAction } from '../lib/logger';
 import { useTheme } from '../context/ThemeContext';
 
 export default function SettingsScreen() {
     const { profile, user, refreshProfile } = useAuth();
-    const { theme, toggleTheme } = useTheme();
+    const { theme, setTheme } = useTheme();
 
     // Upload states
     const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
@@ -230,23 +230,36 @@ export default function SettingsScreen() {
                         {/* Tema Ayarları */}
                         <section>
                             <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Görünüm Ayarları</h2>
-                            <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-surface-dark/50 rounded-lg border border-border-light dark:border-border-dark">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                                        {theme === 'dark' ? <Moon size={20} /> : <Sun size={20} />}
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-semibold text-slate-900 dark:text-white">Koyu Tema</p>
-                                        <p className="text-xs text-slate-500">Uygulama görünümünü değiştirin</p>
-                                    </div>
-                                </div>
+                            <div className="flex flex-col sm:flex-row gap-4">
+                                {/* Light Mode Button */}
                                 <button
-                                    onClick={toggleTheme}
-                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${theme === 'dark' ? 'bg-primary' : 'bg-slate-200 dark:bg-slate-700'}`}
+                                    onClick={() => setTheme('light')}
+                                    className={`flex-1 flex flex-col items-center gap-3 p-4 rounded-xl border-2 transition-all outline-none ${theme === 'light' ? 'border-primary bg-primary/5 dark:bg-primary/10' : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-slate-900'}`}
                                 >
-                                    <span
-                                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${theme === 'dark' ? 'translate-x-6' : 'translate-x-1'}`}
-                                    />
+                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${theme === 'light' ? 'bg-primary text-white shadow-md' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'}`}>
+                                        <Sun size={24} />
+                                    </div>
+                                    <span className={`font-semibold ${theme === 'light' ? 'text-primary' : 'text-slate-600 dark:text-slate-400'}`}>Açık Tema</span>
+                                </button>
+                                {/* Dark Mode Button */}
+                                <button
+                                    onClick={() => setTheme('dark')}
+                                    className={`flex-1 flex flex-col items-center gap-3 p-4 rounded-xl border-2 transition-all outline-none ${theme === 'dark' ? 'border-primary bg-primary/5 dark:bg-primary/10' : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-slate-900'}`}
+                                >
+                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${theme === 'dark' ? 'bg-primary text-white shadow-md' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'}`}>
+                                        <Moon size={24} />
+                                    </div>
+                                    <span className={`font-semibold ${theme === 'dark' ? 'text-primary' : 'text-slate-600 dark:text-slate-400'}`}>Koyu Tema</span>
+                                </button>
+                                {/* System Mode Button */}
+                                <button
+                                    onClick={() => setTheme('system')}
+                                    className={`flex-1 flex flex-col items-center gap-3 p-4 rounded-xl border-2 transition-all outline-none ${theme === 'system' ? 'border-primary bg-primary/5 dark:bg-primary/10' : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-slate-900'}`}
+                                >
+                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${theme === 'system' ? 'bg-primary text-white shadow-md' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'}`}>
+                                        <MonitorSmartphone size={24} />
+                                    </div>
+                                    <span className={`font-semibold ${theme === 'system' ? 'text-primary' : 'text-slate-600 dark:text-slate-400'}`}>Sistem</span>
                                 </button>
                             </div>
                         </section>

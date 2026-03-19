@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import { executeViewFile } from '../hooks/useFileUrl';
-import { Loader2, Search, FileText, FileUp, Eye, Filter, Download } from 'lucide-react';
+import { Loader2, Search, FileText } from 'lucide-react';
 
 interface Invoice {
     id: string;
@@ -210,7 +210,7 @@ export default function MyInvoicesScreen() {
                         className="p-2 text-slate-500 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 disabled:opacity-50 shrink-0 flex items-center justify-center min-w-[42px] min-h-[42px]"
                         title="Yenile"
                     >
-                        <span className={`material - symbols - outlined block ${isLoading ? 'animate-spin' : ''} `}>refresh</span>
+                        <span className={`material-symbols-outlined block ${isLoading ? 'animate-spin' : ''}`}>refresh</span>
                     </button>
                 </div>
             </div>
@@ -258,10 +258,10 @@ export default function MyInvoicesScreen() {
                                             {invoice.company_name || <span className="text-slate-400 italic">Bilinmiyor</span>}
                                         </td>
                                         <td className="px-6 py-4 text-center">
-                                            <span className={`inline - flex items - center rounded - md px - 2 py - 1 text - xs font - medium border ${invoice.document_type === 'İrsaliye'
-                                                    ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800/50'
-                                                    : 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800/50'
-                                                } `}>
+                                            <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium border ${invoice.document_type === 'İrsaliye'
+                                                ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800/50'
+                                                : 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800/50'
+                                                }`}>
                                                 {invoice.document_type || 'Belirtilmedi'}
                                             </span>
                                         </td>
