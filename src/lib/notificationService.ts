@@ -1,5 +1,12 @@
 import { supabase } from './supabaseClient';
 
+// Helper function to force UI updates immediately, bypassing websocket lag
+const triggerLocalUpdate = () => {
+    if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('notifications_updated'));
+    }
+};
+
 export interface Notification {
     id: string;
     user_id: string;
@@ -48,6 +55,8 @@ export const markAsRead = async (notificationId: string): Promise<void> => {
 
     if (error) {
         console.error('Error marking notification as read:', error);
+    } else {
+        triggerLocalUpdate();
     }
 };
 
@@ -60,6 +69,8 @@ export const markAllAsRead = async (userId: string): Promise<void> => {
 
     if (error) {
         console.error('Error marking all notifications as read:', error);
+    } else {
+        triggerLocalUpdate();
     }
 };
 
@@ -71,6 +82,8 @@ export const deleteNotification = async (notificationId: string): Promise<void> 
 
     if (error) {
         console.error('Error deleting notification:', error);
+    } else {
+        triggerLocalUpdate();
     }
 };
 
@@ -82,6 +95,8 @@ export const deleteAllNotifications = async (userId: string): Promise<void> => {
 
     if (error) {
         console.error('Error deleting all notifications:', error);
+    } else {
+        triggerLocalUpdate();
     }
 };
 
@@ -107,5 +122,7 @@ export const sendNotification = async (params: SendNotificationParams): Promise<
 
     if (error) {
         console.error('Error sending notification:', error);
+    } else {
+        triggerLocalUpdate();
     }
 };

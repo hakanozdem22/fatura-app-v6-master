@@ -70,6 +70,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     useEffect(() => {
         let mounted = true;
 
+        // "Beni Hatırla" (Remember Me) kontrolü
+        // Hot-reload'lardan etkilenmemek için sessionStorage kullanıyoruz (uygulama her tamamen kapandığında sıfırlanır)
+        if (!sessionStorage.getItem('auth_initialized')) {
+            sessionStorage.setItem('auth_initialized', 'true');
+            if (localStorage.getItem('remember_me') !== 'true') {
+                // "Beni Hatırla" işaretli değilse, uygulama yeniden başlatıldığında çıkış yap
+                supabase.auth.signOut();
+            }
+        }
+
         supabase.auth.getSession().then(({ data: { session } }) => {
             if (mounted) {
                 setSession(session);

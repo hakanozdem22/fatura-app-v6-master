@@ -7,6 +7,8 @@ import { sendNotification } from '../lib/notificationService';
 
 import { PDFDocument } from 'pdf-lib';
 import { v4 as uuidv4 } from 'uuid';
+import { useFileUrl } from '../hooks/useFileUrl';
+import { getPresignedUrlFromR2 } from '../lib/r2Storage';
 
 interface Invoice {
     id: string;
@@ -46,6 +48,8 @@ export default function RejectedDocumentsScreen() {
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
     const [isActionLoading, setIsActionLoading] = useState(false);
+
+    const { resolvedUrl, isLoadingUrl } = useFileUrl(selectedInvoice?.file_url);
 
     const role = profile?.role?.toLowerCase().trim();
     const isSatinalma = role === 'satinalma';
@@ -113,10 +117,12 @@ export default function RejectedDocumentsScreen() {
             // DAMGALAMA İŞLEMİ (ManagerApprovalWorkspace.tsx'den uyarlandı)
             if (stampUrl && (invoice.original_file_url || invoice.file_url)) {
                 // Her zaman varsa orijinali kullan (kaşeleri temizlemek için), yoksa mevcut olanı
-                const sourceUrl = invoice.original_file_url || invoice.file_url;
+                let sourceUrl = invoice.original_file_url || invoice.file_url;
                 if (!sourceUrl) throw new Error("Dosya URL'si bulunamadı.");
 
-                const isPdf = sourceUrl.toLowerCase().includes('.pdf');
+                if (sourceUrl.startsWith('r2://')) sourceUrl = await getPresignedUrlFromR2(sourceUrl.replace('r2://', ''));
+
+                const isPdf = sourceUrl.split('?')[0].toLowerCase().endsWith('.pdf');
 
                 if (isPdf) {
                     try {
@@ -449,19 +455,24 @@ export default function RejectedDocumentsScreen() {
 
                         <div className="flex-1 overflow-hidden p-6 gap-6 flex flex-col lg:flex-row bg-slate-50 dark:bg-[#0f172a]">
                             <div className="flex-1 h-full min-h-[400px]">
-                                {selectedInvoice.file_url ? (
-                                    selectedInvoice.file_url.toLowerCase().endsWith('.pdf') ? (
+                                {isLoadingUrl ? (
+                                    <div className="flex flex-col items-center justify-center h-full text-slate-400">
+                                        <Loader2 className="animate-spin mb-4" size={48} />
+                                        <p>Güvenli arşive erişiliyor...</p>
+                                    </div>
+                                ) : resolvedUrl ? (
+                                    resolvedUrl.split('?')[0].toLowerCase().endsWith('.pdf') ? (
                                         <iframe
-                                            src={`${selectedInvoice.file_url}#toolbar=1`}
+                                            src={`${resolvedUrl}#toolbar=1`}
                                             className="w-full h-full rounded-xl border border-slate-200 dark:border-slate-800 shadow-lg"
                                             title="Belge Önizleme"
                                         />
                                     ) : (
                                         <div className="w-full h-full rounded-xl border border-slate-200 dark:border-slate-800 shadow-lg bg-white dark:bg-slate-900 p-2 overflow-auto flex items-center justify-center">
                                             <img
-                                                src={selectedInvoice.file_url}
+                                                src={resolvedUrl}
                                                 alt="Fatura"
-                                                className="max-width-full h-auto rounded-lg"
+                                                className="max-width-full h-auto rounded-lg object-contain"
                                             />
                                         </div>
                                     )

@@ -6,6 +6,8 @@ import { logAction } from '../lib/logger';
 import { sendNotification } from '../lib/notificationService';
 import { PDFDocument } from 'pdf-lib';
 import { v4 as uuidv4 } from 'uuid';
+import { useFileUrl, executeViewFile } from '../hooks/useFileUrl';
+import { getPresignedUrlFromR2 } from '../lib/r2Storage';
 
 interface Invoice {
   id: string;
@@ -40,6 +42,8 @@ export default function ManagerApprovalWorkspace() {
   const [forwardingInvoice, setForwardingInvoice] = useState<Invoice | null>(null);
   const [selectedForwardManagerId, setSelectedForwardManagerId] = useState('');
   const [zoom, setZoom] = useState(1); // v7.2.4: Zum seviyesi
+
+  const { resolvedUrl, isLoadingUrl } = useFileUrl(selectedInvoice?.file_url);
 
   const fetchPendingInvoices = useCallback(async () => {
     if (!user) return;
@@ -111,7 +115,9 @@ export default function ManagerApprovalWorkspace() {
         if (isPdf) {
           setActionStatus({ type: 'idle', message: 'Onay kaşesi ekleniyor (PDF)...' });
           try {
-            const existingPdfBytes = await fetch(selectedInvoice.file_url).then(res => res.arrayBuffer());
+            let fetchUrl = selectedInvoice.file_url;
+            if (fetchUrl.startsWith('r2://')) fetchUrl = await getPresignedUrlFromR2(fetchUrl.replace('r2://', ''));
+            const existingPdfBytes = await fetch(fetchUrl).then(res => res.arrayBuffer());
             const stampImageBytes = await fetch(stampUrl).then(res => res.arrayBuffer());
             const pdfDoc = await PDFDocument.load(existingPdfBytes);
             let stampImage;
@@ -165,6 +171,8 @@ export default function ManagerApprovalWorkspace() {
           // GÖRSEL DAMGALAMA
           setActionStatus({ type: 'idle', message: 'Onay kaşesi ekleniyor (Görsel)...' });
           try {
+            let fetchUrl = selectedInvoice.file_url;
+            if (fetchUrl.startsWith('r2://')) fetchUrl = await getPresignedUrlFromR2(fetchUrl.replace('r2://', ''));
             const loadImage = (url: string): Promise<HTMLImageElement> => new Promise((resolve, reject) => {
               const img = new Image();
               img.crossOrigin = 'anonymous';
@@ -174,7 +182,7 @@ export default function ManagerApprovalWorkspace() {
             });
 
             const [bgImg, stampImg] = await Promise.all([
-              loadImage(selectedInvoice.file_url),
+              loadImage(fetchUrl),
               loadImage(stampUrl)
             ]);
 
@@ -294,7 +302,9 @@ export default function ManagerApprovalWorkspace() {
         if (isPdf) {
           setActionStatus({ type: 'idle', message: 'Ret kaşesi ekleniyor (PDF)...' });
           try {
-            const existingPdfBytes = await fetch(selectedInvoice.file_url).then(res => res.arrayBuffer());
+            let fetchUrl = selectedInvoice.file_url;
+            if (fetchUrl.startsWith('r2://')) fetchUrl = await getPresignedUrlFromR2(fetchUrl.replace('r2://', ''));
+            const existingPdfBytes = await fetch(fetchUrl).then(res => res.arrayBuffer());
             const stampImageBytes = await fetch(stampUrl).then(res => res.arrayBuffer());
             const pdfDoc = await PDFDocument.load(existingPdfBytes);
             let stampImage;
@@ -346,9 +356,11 @@ export default function ManagerApprovalWorkspace() {
             return;
           }
         } else {
-          // GÖRSEL DAMGALAMA
+          // GÖRSEL RET KAŞESİ
           setActionStatus({ type: 'idle', message: 'Ret kaşesi ekleniyor (Görsel)...' });
           try {
+            let fetchUrl = selectedInvoice.file_url;
+            if (fetchUrl.startsWith('r2://')) fetchUrl = await getPresignedUrlFromR2(fetchUrl.replace('r2://', ''));
             const loadImage = (url: string): Promise<HTMLImageElement> => new Promise((resolve, reject) => {
               const img = new Image();
               img.crossOrigin = 'anonymous';
@@ -358,7 +370,7 @@ export default function ManagerApprovalWorkspace() {
             });
 
             const [bgImg, stampImg] = await Promise.all([
-              loadImage(selectedInvoice.file_url),
+              loadImage(fetchUrl),
               loadImage(stampUrl)
             ]);
 
@@ -566,11 +578,11 @@ export default function ManagerApprovalWorkspace() {
                       <td className="px-6 py-4 text-center">
                         <div className="flex items-center justify-center gap-2">
                           {invoice.file_url && (
-                            <a href={invoice.file_url} target="_blank" rel="noopener noreferrer"
+                            <button onClick={() => executeViewFile(invoice.file_url)}
                               className="inline-flex items-center justify-center p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
                               title="Dosyayı Gör">
                               <span className="material-symbols-outlined text-[20px]">visibility</span>
-                            </a>
+                            </button>
                           )}
                           <button
                             onClick={() => { setSelectedInvoice(invoice); setRejectNote(''); }}
@@ -703,23 +715,29 @@ export default function ManagerApprovalWorkspace() {
                 className="transition-transform duration-200 ease-out origin-top shadow-inner"
                 style={{ transform: `scale(${zoom})`, minWidth: '100%', display: 'flex', justifyContent: 'center' }}
               >
-                <div className="w-full max-w-5xl bg-white shadow-2xl rounded-sm overflow-hidden border border-slate-800">
-                  {selectedInvoice.file_url ? (
-                    selectedInvoice.file_url.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
-                      <img
-                        src={selectedInvoice.file_url}
-                        alt="Belge"
-                        className="w-full h-auto block"
+                {/* Sol Taraf: Belge Önizleme */}
+                <div className="w-full max-w-5xl bg-white shadow-2xl rounded-sm overflow-hidden border border-slate-800 flex items-center justify-center">
+                  {isLoadingUrl ? (
+                    <div className="flex flex-col items-center justify-center p-8 gap-4 text-slate-400 min-h-[600px]">
+                      <Loader2 className="animate-spin" size={48} />
+                      <p>Güvenli arşive erişiliyor...</p>
+                    </div>
+                  ) : resolvedUrl ? (
+                    resolvedUrl.split('?')[0].toLowerCase().endsWith('.pdf') ? (
+                      <iframe
+                        src={`${resolvedUrl}#toolbar=1`}
+                        className="w-full h-screen min-h-[1200px] border-none"
+                        title="Belge Önizleme"
                       />
                     ) : (
-                      <iframe
-                        src={selectedInvoice.file_url}
-                        className="w-full h-screen min-h-[1200px] border-none"
-                        title="PDF Önizleme"
+                      <img
+                        src={resolvedUrl}
+                        alt="Belge Önizleme"
+                        className="w-full h-auto block"
                       />
                     )
                   ) : (
-                    <div className="flex flex-col items-center justify-center text-slate-500 min-h-[600px] bg-[#0f172a]">
+                    <div className="text-slate-500 flex flex-col items-center justify-center gap-4 h-full min-h-[600px] bg-[#0f172a]">
                       <span className="material-symbols-outlined text-6xl mb-3">description</span>
                       <p className="text-sm">Belge önizlemesi yüklenemedi.</p>
                     </div>

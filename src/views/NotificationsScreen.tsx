@@ -17,6 +17,8 @@ export default function NotificationsScreen() {
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [notificationToDelete, setNotificationToDelete] = useState<string | 'all' | null>(null);
 
     const fetchNotificationsData = useCallback(async () => {
         if (!userId) return;
@@ -75,28 +77,40 @@ export default function NotificationsScreen() {
         setActionLoading(null);
     };
 
-    const handleDelete = async (e: React.MouseEvent, id: string) => {
+    const handleDeleteClick = (e: React.MouseEvent, id: string) => {
         e.stopPropagation();
-        if (window.confirm('Bu bildirimi silmek istediğinize emin misiniz?')) {
-            setActionLoading(id);
-            await deleteNotification(id);
-            await fetchNotificationsData();
-            setActionLoading(null);
-        }
+        setNotificationToDelete(id);
+        setShowDeleteModal(true);
     };
 
-    const handleDeleteAll = async () => {
-        if (!user?.id) return;
-        if (window.confirm('Tüm bildirimleri kalıcı olarak silmek istediğinize emin misiniz?')) {
+    const handleDeleteAllClick = () => {
+        setNotificationToDelete('all');
+        setShowDeleteModal(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!notificationToDelete) return;
+
+        const targetId = notificationToDelete;
+        setShowDeleteModal(false);
+        setNotificationToDelete(null);
+
+        if (targetId === 'all') {
+            if (!userId) return;
             setActionLoading('delete-all');
-            await deleteAllNotifications(user.id);
+            await deleteAllNotifications(userId);
+            await fetchNotificationsData();
+            setActionLoading(null);
+        } else {
+            setActionLoading(targetId);
+            await deleteNotification(targetId);
             await fetchNotificationsData();
             setActionLoading(null);
         }
     };
 
     return (
-        <div className="p-6 max-w-5xl mx-auto flex flex-col h-full overflow-hidden animate-in fade-in zoom-in duration-300">
+        <div className="p-6 max-w-7xl mx-auto flex flex-col h-full overflow-hidden animate-in fade-in zoom-in duration-300">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                 <div>
                     <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
@@ -126,7 +140,7 @@ export default function NotificationsScreen() {
 
                     {notifications.length > 0 && (
                         <button
-                            onClick={handleDeleteAll}
+                            onClick={handleDeleteAllClick}
                             disabled={actionLoading === 'delete-all'}
                             className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20 rounded-xl transition-colors font-medium border border-red-100 dark:border-red-500/20"
                         >
@@ -140,6 +154,41 @@ export default function NotificationsScreen() {
                     )}
                 </div>
             </div>
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl dark:bg-slate-900 border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-200">
+                        <div className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-900/30">
+                                <Trash2 size={24} />
+                            </div>
+                            <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                                {notificationToDelete === 'all' ? 'Tüm Bildirimleri Sil' : 'Bildirimi Sil'}
+                            </h3>
+                        </div>
+                        <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
+                            {notificationToDelete === 'all'
+                                ? 'Tüm bildirimleri kalıcı olarak silmek istediğinize emin misiniz? Bu işlem geri alınamaz.'
+                                : 'Bu bildirimi kalıcı olarak silmek istediğinize emin misiniz? Bu işlem geri alınamaz.'}
+                        </p>
+                        <div className="mt-6 flex justify-end gap-3">
+                            <button
+                                onClick={() => { setShowDeleteModal(false); setNotificationToDelete(null); }}
+                                className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700/50 transition-colors"
+                            >
+                                İptal
+                            </button>
+                            <button
+                                onClick={handleConfirmDelete}
+                                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 dark:hover:bg-red-500 transition-colors"
+                            >
+                                Sil
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700/50 flex flex-col flex-1 overflow-hidden relative">
                 {loading ? (
@@ -200,7 +249,7 @@ export default function NotificationsScreen() {
                                     </div>
 
                                     <button
-                                        onClick={(e) => handleDelete(e, notification.id)}
+                                        onClick={(e) => handleDeleteClick(e, notification.id)}
                                         disabled={actionLoading === notification.id}
                                         className="absolute bottom-4 right-4 p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
                                         title="Bildirimi Sil"

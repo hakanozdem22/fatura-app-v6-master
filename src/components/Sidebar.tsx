@@ -38,7 +38,13 @@ export default function Sidebar({ isCollapsed = false, toggleSidebar }: SidebarP
             // Her 30 saniyede bir kontrol et (Fallback)
             const interval = setInterval(fetchUnreadCount, 30000);
 
-            // Realtime dinleme
+            // YEREL TETİKLEYİCİ: Bildirim okunduğunda veya silindiğinde anında çalışır (Websocket gecikmesini önler)
+            const handleLocalUpdate = () => {
+                if (mounted) fetchUnreadCount();
+            };
+            window.addEventListener('notifications_updated', handleLocalUpdate);
+
+            // Realtime dinleme (Diğer cihazlardan veya sekmeden gelen güncellemeler için)
             const channel = supabase
                 .channel('sidebar_notifications_changes')
                 .on('postgres_changes', {
@@ -54,6 +60,7 @@ export default function Sidebar({ isCollapsed = false, toggleSidebar }: SidebarP
             return () => {
                 mounted = false;
                 clearInterval(interval);
+                window.removeEventListener('notifications_updated', handleLocalUpdate);
                 supabase.removeChannel(channel);
             };
         }

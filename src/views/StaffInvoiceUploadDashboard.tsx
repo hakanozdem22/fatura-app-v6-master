@@ -4,6 +4,7 @@ import { FileUp, Loader2, CheckCircle2, AlertCircle, ChevronDown } from 'lucide-
 import { useAuth } from '../context/AuthContext';
 import { logAction } from '../lib/logger';
 import { sendNotification } from '../lib/notificationService';
+import { executeViewFile } from '../hooks/useFileUrl';
 
 interface Invoice {
     id: string;
@@ -117,6 +118,7 @@ export default function StaffInvoiceUploadDashboard() {
     const [pendingInvoiceData, setPendingInvoiceData] = useState<Omit<Invoice, 'id'> | null>(null);
     const [previewFileUrl, setPreviewFileUrl] = useState<string | null>(null);
     const [previewFileType, setPreviewFileType] = useState<string | null>(null);
+    const [formError, setFormError] = useState<string | null>(null);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -421,14 +423,25 @@ export default function StaffInvoiceUploadDashboard() {
                                     </div>
 
                                     {/* Uyarı Kutusu */}
-                                    <div className="bg-[#1e293b]/50 border border-slate-800 p-4 rounded-xl flex gap-4 items-start animate-in fade-in slide-in-from-top-2 duration-700">
-                                        <div className="w-6 h-6 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center shrink-0">
-                                            <AlertCircle size={14} className="text-blue-500" />
+                                    {formError ? (
+                                        <div className="bg-red-500/10 border border-red-500/30 p-4 rounded-xl flex gap-4 items-start animate-in fade-in slide-in-from-top-2 duration-300">
+                                            <div className="w-6 h-6 rounded-full bg-red-500/20 border border-red-500/50 flex items-center justify-center shrink-0">
+                                                <AlertCircle size={14} className="text-red-500" />
+                                            </div>
+                                            <p className="text-[13px] text-red-400 font-bold leading-relaxed">
+                                                {formError}
+                                            </p>
                                         </div>
-                                        <p className="text-[13px] text-slate-300 leading-relaxed font-medium">
-                                            Lütfen belge detaylarını kontrol ediniz ve eksik alanları doldurunuz.
-                                        </p>
-                                    </div>
+                                    ) : (
+                                        <div className="bg-[#1e293b]/50 border border-slate-800 p-4 rounded-xl flex gap-4 items-start animate-in fade-in slide-in-from-top-2 duration-700">
+                                            <div className="w-6 h-6 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center shrink-0">
+                                                <AlertCircle size={14} className="text-blue-500" />
+                                            </div>
+                                            <p className="text-[13px] text-slate-300 leading-relaxed font-medium">
+                                                Lütfen belge detaylarını kontrol ediniz ve eksik alanları doldurunuz.
+                                            </p>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Personel Kartı */}
@@ -491,8 +504,16 @@ export default function StaffInvoiceUploadDashboard() {
                                             <input
                                                 type="text"
                                                 value={pendingInvoiceData.invoice_no || ''}
-                                                onChange={(e) => setPendingInvoiceData({ ...pendingInvoiceData, invoice_no: e.target.value })}
-                                                className="w-full bg-[#1e293b]/50 border border-slate-700/50 p-3.5 rounded-xl text-[15px] font-black outline-none focus:ring-2 focus:ring-blue-500/50"
+                                                onChange={(e) => {
+                                                    const rawValue = e.target.value.toUpperCase();
+                                                    if (/[^a-zA-Z0-9_-]/.test(rawValue)) {
+                                                        setFormError('Belge numarası özel karakter içeremez. Sadece harf, rakam, tire (-) ve alt çizgi (_) kullanabilirsiniz.');
+                                                    } else {
+                                                        setFormError(null);
+                                                        setPendingInvoiceData({ ...pendingInvoiceData, invoice_no: rawValue });
+                                                    }
+                                                }}
+                                                className={`w-full bg-[#1e293b]/50 border ${formError ? 'border-red-500/50 focus:ring-red-500/50' : 'border-slate-700/50 focus:ring-blue-500/50'} p-3.5 rounded-xl text-[15px] font-black outline-none focus:ring-2 transition-all`}
                                             />
                                         </div>
                                         <div className="space-y-2">
@@ -723,9 +744,9 @@ export default function StaffInvoiceUploadDashboard() {
                                                 <td className="px-6 py-4 text-center">
                                                     <div className="flex items-center justify-end gap-2">
                                                         {invoice.file_url && (
-                                                            <a href={invoice.file_url} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-primary dark:hover:text-primary transition-colors inline-block" title="Dosyayı Gör">
+                                                            <button onClick={() => executeViewFile(invoice.file_url)} className="text-slate-400 hover:text-primary dark:hover:text-primary transition-colors inline-block" title="Dosyayı Gör">
                                                                 <span className="material-symbols-outlined text-[20px]">visibility</span>
-                                                            </a>
+                                                            </button>
                                                         )}
                                                         <button
                                                             onClick={() => handleDeleteClick(invoice.id, invoice.file_url)}

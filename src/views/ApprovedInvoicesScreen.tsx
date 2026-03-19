@@ -5,8 +5,9 @@ import { useAuth } from '../context/AuthContext';
 import { logAction } from '../lib/logger';
 import { sendNotification } from '../lib/notificationService';
 
-import { v4 as uuidv4 } from 'uuid';
 import { PDFDocument } from 'pdf-lib';
+import { uploadFileToR2, getPresignedUrlFromR2 } from '../lib/r2Storage';
+import { useFileUrl, executeViewFile } from '../hooks/useFileUrl';
 
 interface Invoice {
     id: string;
@@ -44,6 +45,8 @@ export default function ApprovedInvoicesScreen() {
     const isManager = rawRole === 'manager';
     const isMuhasebe = rawRole === 'muhasebe';
     const isSatinalma = rawRole === 'satinalma';
+
+    const { resolvedUrl, isLoadingUrl } = useFileUrl(selectedInvoice?.file_url);
 
     const fetchApprovedInvoices = useCallback(async () => {
         setIsLoading(true);
@@ -98,11 +101,19 @@ export default function ApprovedInvoicesScreen() {
             const stampUrl = userProfile?.approval_stamp_url || profile?.approval_stamp_url;
 
             if (stampUrl && selectedInvoice.file_url) {
+                // R2 üzerinden geliyorsa geçici URL üret
+                let sourceFetchUrl = selectedInvoice.file_url;
+                const isAlreadyInR2 = sourceFetchUrl.startsWith('r2://');
+                if (isAlreadyInR2) {
+                    const r2Key = sourceFetchUrl.replace('r2://', '');
+                    sourceFetchUrl = await getPresignedUrlFromR2(r2Key);
+                }
+
                 const isPdf = selectedInvoice.file_url.toLowerCase().includes('.pdf');
                 if (isPdf) {
                     setActionStatus({ type: 'idle', message: 'Onay kaşesi ekleniyor (PDF)...' });
                     try {
-                        const existingPdfBytes = await fetch(selectedInvoice.file_url).then(res => res.arrayBuffer());
+                        const existingPdfBytes = await fetch(sourceFetchUrl).then(res => res.arrayBuffer());
                         const stampImageBytes = await fetch(stampUrl).then(res => res.arrayBuffer());
                         const pdfDoc = await PDFDocument.load(existingPdfBytes);
 
@@ -134,22 +145,25 @@ export default function ApprovedInvoicesScreen() {
                         }
 
                         const pdfBytes = await pdfDoc.save();
-                        const newFileName = `accountant_approved_${uuidv4()}.pdf`;
+                        const safeInvoiceNo = selectedInvoice.invoice_no.replace(/[^a-zA-Z0-9_-]/g, '_');
+                        const r2Folder = selectedInvoice.document_type === 'İrsaliye' ? 'irsaliyeler' : 'faturalar';
+                        const newFileName = `${safeInvoiceNo}.pdf`;
+                        const r2Key = `${r2Folder}/${newFileName}`;
                         const pdfBlob = new Blob([pdfBytes.buffer as ArrayBuffer], { type: 'application/pdf' });
 
-                        const { error: uploadError } = await supabase.storage
-                            .from('invoices-pdfs')
-                            .upload(`stamped/${newFileName}`, pdfBlob, { contentType: 'application/pdf' });
+                        setActionStatus({ type: 'idle', message: 'Dosya güvenli arşive (R2) yükleniyor...' });
+                        const r2Success = await uploadFileToR2(pdfBlob, r2Key, 'application/pdf');
+                        if (!r2Success) throw new Error("R2 Kasa Yükleme Başarısız!");
 
-                        if (uploadError) throw new Error("Onaylı PDF yüklenemedi: " + uploadError.message);
+                        finalFileUrl = `r2://${r2Key}`;
 
-                        const { data: { publicUrl } } = supabase.storage
-                            .from('invoices-pdfs')
-                            .getPublicUrl(`stamped/${newFileName}`);
-
-                        finalFileUrl = publicUrl;
-
-                        finalFileUrl = publicUrl;
+                        // Eski dosya Supabase'de ise temizle
+                        if (!isAlreadyInR2) {
+                            const matches = selectedInvoice.file_url.match(/\/invoices-pdfs\/(.+)$/);
+                            if (matches && matches[1]) {
+                                await supabase.storage.from('invoices-pdfs').remove([matches[1]]);
+                            }
+                        }
                     } catch (pdfError) {
                         console.error("Muhasebe Kaşesi Hatası (PDF):", pdfError);
                         setActionStatus({ type: 'error', message: 'PDF damgalanamadı.' });
@@ -169,7 +183,7 @@ export default function ApprovedInvoicesScreen() {
                         });
 
                         const [bgImg, stampImg] = await Promise.all([
-                            loadImage(selectedInvoice.file_url),
+                            loadImage(sourceFetchUrl),
                             loadImage(stampUrl)
                         ]);
 
@@ -188,16 +202,23 @@ export default function ApprovedInvoicesScreen() {
                             ctx.drawImage(stampImg, x, y, sWidth, sHeight);
 
                             const blob: Blob = await new Promise((resolve) => canvas.toBlob((b) => resolve(b!), 'image/jpeg', 0.9));
-                            const newFileName = `accountant_approved_${uuidv4()}.jpg`;
-                            const { error: uploadError } = await supabase.storage
-                                .from('invoices-pdfs')
-                                .upload(`stamped/${newFileName}`, blob, { contentType: 'image/jpeg' });
+                            const safeInvoiceNo = selectedInvoice.invoice_no.replace(/[^a-zA-Z0-9_-]/g, '_');
+                            const r2Folder = selectedInvoice.document_type === 'İrsaliye' ? 'irsaliyeler' : 'faturalar';
+                            const newFileName = `${safeInvoiceNo}.jpg`;
+                            const r2Key = `${r2Folder}/${newFileName}`;
 
-                            if (uploadError) throw uploadError;
-                            const { data: { publicUrl } } = supabase.storage.from('invoices-pdfs').getPublicUrl(`stamped/${newFileName}`);
-                            finalFileUrl = publicUrl;
+                            setActionStatus({ type: 'idle', message: 'Dosya güvenli arşive (R2) yükleniyor...' });
+                            const r2Success = await uploadFileToR2(blob, r2Key, 'image/jpeg');
+                            if (!r2Success) throw new Error("R2 Kasa Yükleme Başarısız!");
 
-                            finalFileUrl = publicUrl;
+                            finalFileUrl = `r2://${r2Key}`;
+
+                            if (!isAlreadyInR2) {
+                                const matches = selectedInvoice.file_url.match(/\/invoices-pdfs\/(.+)$/);
+                                if (matches && matches[1]) {
+                                    await supabase.storage.from('invoices-pdfs').remove([matches[1]]);
+                                }
+                            }
                         }
                     } catch (imgError) {
                         console.error("Muhasebe Kaşesi Hatası (Görsel):", imgError);
@@ -250,7 +271,9 @@ export default function ApprovedInvoicesScreen() {
             }
 
             fetchApprovedInvoices();
-            setTimeout(() => setSelectedInvoice(null), 1500);
+            setTimeout(() => {
+                setSelectedInvoice(null);
+            }, 1500);
         } catch (err) {
             console.error("Onay hatası:", err);
             setActionStatus({ type: 'error', message: 'Onay verilirken bir hata oluştu.' });
@@ -270,11 +293,18 @@ export default function ApprovedInvoicesScreen() {
             const stampUrl = userProfile?.rejection_stamp_url || profile?.rejection_stamp_url;
 
             if (stampUrl && selectedInvoice.file_url) {
+                let sourceFetchUrl = selectedInvoice.file_url;
+                const isAlreadyInR2 = sourceFetchUrl.startsWith('r2://');
+                if (isAlreadyInR2) {
+                    const r2Key = sourceFetchUrl.replace('r2://', '');
+                    sourceFetchUrl = await getPresignedUrlFromR2(r2Key);
+                }
+
                 const isPdf = selectedInvoice.file_url.toLowerCase().includes('.pdf');
                 if (isPdf) {
                     setActionStatus({ type: 'idle', message: 'Ret kaşesi ekleniyor (PDF)...' });
                     try {
-                        const existingPdfBytes = await fetch(selectedInvoice.file_url).then(res => res.arrayBuffer());
+                        const existingPdfBytes = await fetch(sourceFetchUrl).then(res => res.arrayBuffer());
                         const stampImageBytes = await fetch(stampUrl).then(res => res.arrayBuffer());
                         const pdfDoc = await PDFDocument.load(existingPdfBytes);
                         let stampImage;
@@ -296,12 +326,24 @@ export default function ApprovedInvoicesScreen() {
                             firstPage.drawImage(stampImage, { x: safeX, y: safeY, width: stampWidth, height: stampHeight });
                         }
                         const pdfBytes = await pdfDoc.save();
-                        const newFileName = `rejected_${uuidv4()}.pdf`;
+                        const safeInvoiceNo = selectedInvoice.invoice_no.replace(/[^a-zA-Z0-9_-]/g, '_');
+                        const r2Folder = selectedInvoice.document_type === 'İrsaliye' ? 'irsaliyeler' : 'faturalar';
+                        const newFileName = `${safeInvoiceNo}.pdf`;
+                        const r2Key = `${r2Folder}/${newFileName}`;
                         const pdfBlob = new Blob([pdfBytes.buffer as ArrayBuffer], { type: 'application/pdf' });
-                        const { error: uploadError } = await supabase.storage.from('invoices-pdfs').upload(`stamped/${newFileName}`, pdfBlob, { contentType: 'application/pdf' });
-                        if (uploadError) throw uploadError;
-                        const { data: { publicUrl } } = supabase.storage.from('invoices-pdfs').getPublicUrl(`stamped/${newFileName}`);
-                        finalFileUrl = publicUrl;
+
+                        setActionStatus({ type: 'idle', message: 'Dosya güvenli arşive (R2) yükleniyor...' });
+                        const r2Success = await uploadFileToR2(pdfBlob, r2Key, 'application/pdf');
+                        if (!r2Success) throw new Error("R2 Kasa Yükleme Başarısız!");
+
+                        finalFileUrl = `r2://${r2Key}`;
+
+                        if (!isAlreadyInR2) {
+                            const matches = selectedInvoice.file_url.match(/\/invoices-pdfs\/(.+)$/);
+                            if (matches && matches[1]) {
+                                await supabase.storage.from('invoices-pdfs').remove([matches[1]]);
+                            }
+                        }
                     } catch (e: unknown) {
                         console.error("PDF ret kaşesi hatası:", e);
                         const errorMessage = e instanceof Error ? e.message : 'Bilinmeyen hata';
@@ -322,7 +364,7 @@ export default function ApprovedInvoicesScreen() {
                         });
 
                         const [bgImg, stampImg] = await Promise.all([
-                            loadImage(selectedInvoice.file_url),
+                            loadImage(sourceFetchUrl),
                             loadImage(stampUrl)
                         ]);
 
@@ -344,11 +386,23 @@ export default function ApprovedInvoicesScreen() {
                                 canvas.toBlob((b) => b ? resolve(b) : reject(new Error("Blob oluşturulamadı")), 'image/jpeg', 0.9);
                             });
 
-                            const newFileName = `rejected_${uuidv4()}.jpg`;
-                            const { error: uploadError } = await supabase.storage.from('invoices-pdfs').upload(`stamped/${newFileName}`, blob, { contentType: 'image/jpeg' });
-                            if (uploadError) throw uploadError;
-                            const { data: { publicUrl } } = supabase.storage.from('invoices-pdfs').getPublicUrl(`stamped/${newFileName}`);
-                            finalFileUrl = publicUrl;
+                            const safeInvoiceNo = selectedInvoice.invoice_no.replace(/[^a-zA-Z0-9_-]/g, '_');
+                            const r2Folder = selectedInvoice.document_type === 'İrsaliye' ? 'irsaliyeler' : 'faturalar';
+                            const newFileName = `${safeInvoiceNo}.jpg`;
+                            const r2Key = `${r2Folder}/${newFileName}`;
+
+                            setActionStatus({ type: 'idle', message: 'Dosya güvenli arşive (R2) yükleniyor...' });
+                            const r2Success = await uploadFileToR2(blob, r2Key, 'image/jpeg');
+                            if (!r2Success) throw new Error("R2 Kasa Yükleme Başarısız!");
+
+                            finalFileUrl = `r2://${r2Key}`;
+
+                            if (!isAlreadyInR2) {
+                                const matches = selectedInvoice.file_url.match(/\/invoices-pdfs\/(.+)$/);
+                                if (matches && matches[1]) {
+                                    await supabase.storage.from('invoices-pdfs').remove([matches[1]]);
+                                }
+                            }
                         }
                     } catch (imgError: unknown) {
                         console.error("Görsel ret kaşesi hatası:", imgError);
@@ -580,11 +634,11 @@ export default function ApprovedInvoicesScreen() {
                                                     </button>
                                                 )}
                                                 {invoice.file_url ? (
-                                                    <a href={invoice.file_url} target="_blank" rel="noopener noreferrer"
+                                                    <button onClick={() => executeViewFile(invoice.file_url)}
                                                         className="inline-flex items-center justify-center p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
                                                         title="Dosyayı Gör">
                                                         <span className="material-symbols-outlined text-[20px]">visibility</span>
-                                                    </a>
+                                                    </button>
                                                 ) : (
                                                     <span className="text-slate-300 dark:text-slate-700 w-9 text-center">-</span>
                                                 )}
@@ -668,45 +722,31 @@ export default function ApprovedInvoicesScreen() {
                 selectedInvoice && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-in fade-in duration-300">
                         <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-5xl h-[90vh] flex flex-col overflow-hidden border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-300">
-                            {/* Modal Header */}
-                            <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
-                                        <FileText size={24} />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-xl font-bold text-slate-900 dark:text-white">Belge Detayı & Muhasebe Onayı</h3>
-                                        <p className="text-sm text-slate-500">#{selectedInvoice.invoice_no} - {selectedInvoice.company_name}</p>
-                                    </div>
-                                </div>
-                                <button
-                                    onClick={() => !isProcessing && setSelectedInvoice(null)}
-                                    className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all"
-                                >
-                                    <X size={24} />
-                                </button>
-                            </div>
-
                             {/* Modal Body */}
                             <div className="flex-1 overflow-hidden flex flex-col lg:flex-row">
                                 {/* Left: Document Preview */}
-                                <div className="flex-1 bg-slate-100 dark:bg-slate-950 p-4 overflow-hidden flex items-center justify-center border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-slate-800">
-                                    {selectedInvoice.file_url ? (
-                                        selectedInvoice.file_url.toLowerCase().endsWith('.pdf') ? (
+                                <div className="flex-1 bg-slate-100 dark:bg-slate-950 p-0 overflow-hidden relative border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-slate-800 flex items-center justify-center">
+                                    {isLoadingUrl ? (
+                                        <div className="flex flex-col items-center justify-center p-8 gap-4 text-slate-400">
+                                            <Loader2 className="animate-spin" size={48} />
+                                            <p>Güvenli arşive erişiliyor...</p>
+                                        </div>
+                                    ) : resolvedUrl ? (
+                                        resolvedUrl.split('?')[0].toLowerCase().endsWith('.pdf') ? (
                                             <iframe
-                                                src={`${selectedInvoice.file_url}#toolbar=1`}
-                                                className="w-full h-full rounded-xl border border-slate-200 dark:border-slate-800 shadow-lg"
+                                                src={`${resolvedUrl}#toolbar=1`}
+                                                className="w-full h-full border-none"
                                                 title="Belge Önizleme"
                                             />
                                         ) : (
                                             <img
-                                                src={selectedInvoice.file_url}
+                                                src={resolvedUrl}
                                                 alt="Belge"
-                                                className="max-h-full max-w-full object-contain rounded-xl shadow-lg border border-slate-200 dark:border-slate-800"
+                                                className="w-full h-full object-contain"
                                             />
                                         )
                                     ) : (
-                                        <div className="text-slate-400 flex flex-col items-center gap-4">
+                                        <div className="text-slate-400 flex flex-col items-center justify-center gap-4 h-full w-full">
                                             <AlertTriangle size={48} />
                                             <p>Belge dosyası yüklenemedi.</p>
                                         </div>
@@ -716,6 +756,29 @@ export default function ApprovedInvoicesScreen() {
                                 {/* Right: Info & Actions */}
                                 <div className="w-full lg:w-96 p-8 overflow-y-auto bg-white dark:bg-slate-900">
                                     <div className="space-y-8">
+                                        {/* Modal Header (Moved to right pane) */}
+                                        <div className="flex items-start justify-between pb-6 border-b border-slate-100 dark:border-slate-800">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 shrink-0 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                                                    <FileText size={20} />
+                                                </div>
+                                                <div>
+                                                    <h3 className="text-lg font-bold text-slate-900 dark:text-white leading-tight">Belge Detayı & Muhasebe Onayı</h3>
+                                                    <p className="text-xs text-slate-500 mt-1">#{selectedInvoice.invoice_no} - {selectedInvoice.company_name}</p>
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={() => {
+                                                    if (!isProcessing) {
+                                                        setSelectedInvoice(null);
+                                                    }
+                                                }}
+                                                className="w-8 h-8 shrink-0 flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
+                                            >
+                                                <X size={20} />
+                                            </button>
+                                        </div>
+
                                         {/* Status Section */}
                                         <div>
                                             <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Mevcut Durum</h4>

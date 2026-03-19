@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { Loader2, Search, FileText, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { executeViewFile } from '../hooks/useFileUrl';
 
 interface Invoice {
     id: string;
@@ -14,6 +15,7 @@ interface Invoice {
     document_type?: string;
     created_at?: string;
     approved_at?: string;
+    seq_no?: number;
 }
 
 export default function InvoiceArchiveScreen() {
@@ -40,7 +42,7 @@ export default function InvoiceArchiveScreen() {
                 .from('invoices')
                 .select('*')
                 .eq('status', 'Onaylandı')
-                .order(sortConfig.key, { ascending: sortConfig.direction === 'asc' });
+                .order('created_at', { ascending: true });
 
             if (isSatinalma) {
                 query = query.eq('document_type', 'İrsaliye');
@@ -54,17 +56,19 @@ export default function InvoiceArchiveScreen() {
                 console.error("Arşiv çekme hatası:", error);
             } else {
                 console.log("Archive query result count:", data?.length || 0);
-                if (data && data.length > 0) {
-                    console.log("Sample data:", { status: data[0].status, type: data[0].document_type });
-                }
-                setInvoices(data || []);
+                // Assign persistent sequence numbers based on chronological order
+                const dataWithSeq = (data || []).map((inv, index) => ({
+                    ...inv,
+                    seq_no: index + 1
+                }));
+                setInvoices(dataWithSeq);
             }
         } catch (err) {
             console.error("Beklenmeyen hata:", err);
         } finally {
             setIsLoading(false);
         }
-    }, [isSatinalma, isMuhasebe, role, sortConfig]);
+    }, [isSatinalma, isMuhasebe, role]);
 
     const handleSort = (key: string) => {
         setSortConfig(prev => ({
@@ -74,8 +78,8 @@ export default function InvoiceArchiveScreen() {
     };
 
     const SortIcon = ({ columnKey }: { columnKey: string }) => {
-        if (sortConfig.key !== columnKey) return <ChevronsUpDown size={14} className="ml-1 opacity-30 group-hover:opacity-60 transition-opacity" />;
-        return sortConfig.direction === 'asc' ? <ChevronUp size={14} className="ml-1 text-primary" /> : <ChevronDown size={14} className="ml-1 text-primary" />;
+        if (sortConfig.key !== columnKey) return <ChevronsUpDown size={18} className="ml-1.5 opacity-40 group-hover:opacity-70 transition-opacity" />;
+        return sortConfig.direction === 'asc' ? <ChevronUp size={18} className="ml-1.5 text-primary stroke-[2.5]" /> : <ChevronDown size={18} className="ml-1.5 text-primary stroke-[2.5]" />;
     };
 
     useEffect(() => {
@@ -105,6 +109,34 @@ export default function InvoiceArchiveScreen() {
         }
 
         return matchesSearch && matchesDate;
+    }).sort((a, b) => {
+        const { key, direction } = sortConfig;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let aValue: any = a[key as keyof Invoice];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let bValue: any = b[key as keyof Invoice];
+
+        if (key === 'sequence') {
+            aValue = a.seq_no;
+            bValue = b.seq_no;
+        }
+
+        if (aValue === bValue) return 0;
+        if (aValue == null) return 1;
+        if (bValue == null) return -1;
+
+        if (typeof aValue === 'string' && typeof bValue === 'string') {
+            if (key.includes('date') || key.includes('_at')) {
+                aValue = new Date(aValue).getTime();
+                bValue = new Date(bValue).getTime();
+            } else {
+                return direction === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+            }
+        }
+
+        if (aValue < bValue) return direction === 'asc' ? -1 : 1;
+        if (aValue > bValue) return direction === 'asc' ? 1 : -1;
+        return 0;
     });
 
     const dynamicColSpan = 8;
@@ -173,8 +205,8 @@ export default function InvoiceArchiveScreen() {
                     <table className="w-full text-left text-sm">
                         <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
                             <tr>
-                                <th onClick={() => handleSort('id')} className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 group whitespace-nowrap">
-                                    <div className="flex items-center justify-center">Sıra No <SortIcon columnKey="id" /></div>
+                                <th onClick={() => handleSort('sequence')} className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 group whitespace-nowrap">
+                                    <div className="flex items-center justify-center">Sıra No <SortIcon columnKey="sequence" /></div>
                                 </th>
                                 <th onClick={() => handleSort('company_name')} className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 group whitespace-nowrap">
                                     <div className="flex items-center justify-center">Şirket/Firma <SortIcon columnKey="company_name" /></div>
@@ -218,9 +250,11 @@ export default function InvoiceArchiveScreen() {
                                     </td>
                                 </tr>
                             ) : (
-                                filteredInvoices.map((invoice, index) => (
+                                filteredInvoices.map((invoice) => (
                                     <tr key={invoice.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                                        <td className="px-6 py-4 font-medium text-slate-500 dark:text-slate-400 text-center">{index + 1}</td>
+                                        <td className="px-6 py-4 font-medium text-slate-500 dark:text-slate-400 text-center">
+                                            {invoice.seq_no}
+                                        </td>
                                         <td className="px-6 py-4 font-medium text-slate-900 dark:text-white text-left">
                                             {invoice.company_name || <span className="text-slate-400 italic">Bilinmiyor</span>}
                                         </td>
@@ -241,11 +275,11 @@ export default function InvoiceArchiveScreen() {
                                         </td>
                                         <td className="px-6 py-4 text-center">
                                             {invoice.file_url ? (
-                                                <a href={invoice.file_url} target="_blank" rel="noopener noreferrer"
+                                                <button onClick={() => executeViewFile(invoice.file_url)}
                                                     className="inline-flex items-center justify-center p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
                                                     title="Dosyayı Gör">
                                                     <span className="material-symbols-outlined text-[20px]">visibility</span>
-                                                </a>
+                                                </button>
                                             ) : (
                                                 <span className="text-slate-300 dark:text-slate-700 w-9 text-center">-</span>
                                             )}
