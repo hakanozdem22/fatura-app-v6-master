@@ -142,7 +142,7 @@ export default function InvoiceArchiveScreen() {
     const dynamicColSpan = 8;
 
     return (
-        <div className="mx-auto flex w-full max-w-[1450px] flex-col gap-8 p-8">
+        <div className="mx-auto flex w-full max-w-[1450px] flex-col gap-8 px-8 pb-8 pt-2">
             <header className="flex flex-col gap-1">
                 <h2 className="text-3xl font-bold text-slate-900 dark:text-white">
                     {isSatinalma ? 'İrsaliye Arşivi' : 'Fatura Arşivi'}
@@ -152,14 +152,14 @@ export default function InvoiceArchiveScreen() {
                 </p>
             </header>
 
-            <div className="flex flex-col lg:flex-row gap-4 items-center bg-[#0f172a] dark:bg-slate-900 p-4 rounded-xl shadow-lg border border-slate-800">
+            <div className="flex flex-col lg:flex-row gap-4 items-center bg-white dark:bg-slate-900 p-4 rounded-xl shadow-lg border border-slate-200 dark:border-slate-800">
                 {/* Arama Inputu */}
                 <div className="relative flex-1 w-full">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <Search size={18} className="text-slate-500" />
                     </div>
                     <input
-                        className="block w-full pl-10 pr-3 h-11 border border-slate-800 rounded-lg bg-[#1e293b]/50 text-slate-200 focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all placeholder:text-slate-600"
+                        className="block w-full pl-10 pr-3 h-11 border border-slate-200 dark:border-slate-800 rounded-lg bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600"
                         placeholder="Şirket adı veya belge no ile ara..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
@@ -169,17 +169,17 @@ export default function InvoiceArchiveScreen() {
 
                 {/* Tarih Aralığı ve Filtreler */}
                 <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
-                    <div className="flex items-center gap-2 bg-[#1e293b]/30 h-11 px-2 rounded-lg border border-slate-800">
+                    <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800/30 h-11 px-2 rounded-lg border border-slate-200 dark:border-slate-800">
                         <input
                             type="date"
-                            className="bg-transparent text-slate-300 text-sm outline-none p-1.5 focus:text-white transition-colors"
+                            className="bg-transparent text-slate-700 dark:text-slate-300 text-sm outline-none p-1.5 focus:text-slate-900 dark:focus:text-white transition-colors"
                             value={startDate}
                             onChange={(e) => setStartDate(e.target.value)}
                         />
-                        <span className="text-slate-600">-</span>
+                        <span className="text-slate-400 dark:text-slate-600">-</span>
                         <input
                             type="date"
-                            className="bg-transparent text-slate-300 text-sm outline-none p-1.5 focus:text-white transition-colors"
+                            className="bg-transparent text-slate-700 dark:text-slate-300 text-sm outline-none p-1.5 focus:text-slate-900 dark:focus:text-white transition-colors"
                             value={endDate}
                             onChange={(e) => setEndDate(e.target.value)}
                         />
@@ -187,7 +187,7 @@ export default function InvoiceArchiveScreen() {
 
                     <button
                         onClick={resetFilters}
-                        className="h-11 px-3 bg-[#1e293b]/50 hover:bg-[#1e293b] text-slate-400 hover:text-white border border-slate-800 rounded-lg transition-all shadow-sm flex items-center justify-center"
+                        className="h-11 px-3 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800 rounded-lg transition-all shadow-sm flex items-center justify-center"
                         title="Filtreleri Sıfırla"
                     >
                         <span className="material-symbols-outlined text-[20px]">refresh</span>

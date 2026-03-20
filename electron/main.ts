@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu, ipcMain } from 'electron';
+import { app, BrowserWindow, Menu, ipcMain, nativeTheme } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import * as path from 'path';
@@ -27,8 +27,8 @@ function createWindow() {
     autoHideMenuBar: true,
     titleBarStyle: 'hidden',
     titleBarOverlay: {
-      color: '#0f172a',
-      symbolColor: '#94a3b8',
+      color: (process.platform === 'win32' && !nativeTheme.shouldUseDarkColors) ? '#f6f6f8' : '#0f172a',
+      symbolColor: (process.platform === 'win32' && !nativeTheme.shouldUseDarkColors) ? '#334155' : '#94a3b8',
       height: 36
     },
     icon: path.join(__dirname, '../dist/logo.png'),
@@ -66,6 +66,17 @@ ipcMain.on('set-fullscreen', (_event, value: boolean) => {
     mainWindow.setFullScreen(value);
     // Menü çubuğunu gizle/göster (isteğe bağlı, zaten gizli ama garantiye alalım)
     mainWindow.setMenuBarVisibility(!value);
+  }
+});
+
+// Tema değişikliğinde başlık çubuğu rengini güncelle
+ipcMain.on('set-titlebar-theme', (_event, isDark: boolean) => {
+  if (mainWindow) {
+    mainWindow.setTitleBarOverlay({
+      color: isDark ? '#0f172a' : '#f6f6f8',
+      symbolColor: isDark ? '#94a3b8' : '#334155',
+      height: 36
+    });
   }
 });
 

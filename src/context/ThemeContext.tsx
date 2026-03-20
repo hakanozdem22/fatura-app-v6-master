@@ -19,12 +19,17 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const root = window.document.documentElement;
         root.classList.remove('light', 'dark');
 
+        let isDark: boolean;
         if (t === 'system') {
-            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            root.classList.add(systemPrefersDark ? 'dark' : 'light');
+            isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            root.classList.add(isDark ? 'dark' : 'light');
         } else {
+            isDark = t === 'dark';
             root.classList.add(t);
         }
+
+        // Electron başlık çubuğu rengini güncelle
+        window.electronAPI?.setTitleBarTheme(isDark);
     };
 
     useEffect(() => {

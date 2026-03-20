@@ -523,7 +523,7 @@ export default function ApprovedInvoicesScreen() {
     );
 
     return (
-        <div className="mx-auto flex w-full max-w-[1450px] flex-col gap-8 p-8">
+        <div className="mx-auto flex w-full max-w-[1450px] flex-col gap-8 px-8 pb-8 pt-2">
             <header className="flex flex-col gap-1">
                 <h2 className="text-3xl font-bold text-slate-900 dark:text-white">
                     {isMuhasebe ? 'Alım Onaylı Faturalar' : isSatinalma ? 'Müdür Onaylı İrsaliyeler' : 'Onaylanan Belgeler'}

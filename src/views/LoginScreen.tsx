@@ -18,6 +18,7 @@ export default function LoginScreen() {
     );
     const [otp, setOtp] = useState('');
     const [newPassword, setNewPassword] = useState('');
+    const [confirmNewPassword, setConfirmNewPassword] = useState('');
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -86,8 +87,14 @@ export default function LoginScreen() {
     // Yeni Şifre Kaydetme
     const handleUpdatePassword = async (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true);
         setError(null);
+
+        if (newPassword !== confirmNewPassword) {
+            setError('Şifreler eşleşmiyor. Lütfen tekrar kontrol edin.');
+            return;
+        }
+
+        setLoading(true);
         const { error } = await supabase.auth.updateUser({
             password: newPassword
         });
@@ -310,10 +317,31 @@ export default function LoginScreen() {
                             />
                         </div>
 
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1" htmlFor="confirm-new-password">
+                                Yeni Şifre Tekrar
+                            </label>
+                            <input
+                                id="confirm-new-password"
+                                type="password"
+                                required
+                                value={confirmNewPassword}
+                                onChange={(e) => setConfirmNewPassword(e.target.value)}
+                                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary dark:bg-slate-800 dark:text-white transition-colors outline-none ${confirmNewPassword && newPassword !== confirmNewPassword
+                                        ? 'border-red-400 dark:border-red-500'
+                                        : 'border-slate-300 dark:border-slate-600'
+                                    }`}
+                                placeholder="En az 6 karakter"
+                            />
+                            {confirmNewPassword && newPassword !== confirmNewPassword && (
+                                <p className="mt-1 text-xs text-red-500">Şifreler eşleşmiyor</p>
+                            )}
+                        </div>
+
                         <div className="pt-2">
                             <button
                                 type="submit"
-                                disabled={loading || newPassword.length < 6}
+                                disabled={loading || newPassword.length < 6 || confirmNewPassword.length < 6}
                                 className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors flex justify-center items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                             >
                                 {loading ? <span className="material-symbols-outlined animate-spin">refresh</span> : "Şifremi Güncelle ve Giriş Yap"}
