@@ -1,17 +1,19 @@
 import { supabase } from './supabaseClient';
 
-export async function logAction(userEmail: string | undefined, action: string, details?: string, metadata?: any) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function logAction(userEmail: string | undefined, action: string, details?: string, _metadata?: unknown) {
     if (!userEmail) return;
 
     try {
+        // HATA DÜZELTMESİ: 'metadata' sütunu veritabanındaki 'system_logs' tablosunda 
+        // bulunmadığı için PGRST204 hatasına yol açıyordu. Sadece geçerli sütunlar gönderiliyor.
         const { error } = await supabase
             .from('system_logs')
             .insert([
                 {
                     user_email: userEmail,
                     action,
-                    details,
-                    metadata: metadata ? JSON.stringify(metadata) : null
+                    details
                 }
             ]);
 

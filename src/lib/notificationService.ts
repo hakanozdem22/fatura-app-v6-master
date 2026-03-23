@@ -126,3 +126,52 @@ export const sendNotification = async (params: SendNotificationParams): Promise<
         triggerLocalUpdate();
     }
 };
+
+interface SendNotificationToRoleParams {
+    role: string;
+    title: string;
+    message: string;
+    source_id?: string;
+}
+
+export const sendNotificationToRole = async (params: SendNotificationToRoleParams): Promise<void> => {
+    try {
+        // Fetch all active users with the specified role
+        const { data: users, error: userError } = await supabase
+            .from('users')
+            .select('id')
+            .eq('role', params.role)
+            .eq('status', 'active');
+
+        if (userError) {
+            console.error(`Error fetching users for role ${params.role}:`, userError);
+            return;
+        }
+
+        if (!users || users.length === 0) {
+            console.warn(`No active users found for role: ${params.role}`);
+            return;
+        }
+
+        // Prepare notifications for all users
+        const notifications = users.map(user => ({
+            user_id: user.id,
+            title: params.title,
+            message: params.message,
+            source_id: params.source_id,
+            is_read: false
+        }));
+
+        const { error } = await supabase
+            .from('notifications')
+            .insert(notifications);
+
+        if (error) {
+            console.error(`Error sending notifications to role ${params.role}:`, error);
+        } else {
+            triggerLocalUpdate();
+        }
+    } catch (err) {
+        console.error('Unexpected error in sendNotificationToRole:', err);
+    }
+};

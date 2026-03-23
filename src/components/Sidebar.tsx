@@ -88,7 +88,19 @@ export default function Sidebar({ isCollapsed = false, toggleSidebar }: SidebarP
             name: currentRole === 'muhasebe' ? 'Alım Onaylı Faturalar' : currentRole === 'satinalma' ? 'Müdür Onaylı İrsaliyeler' : 'Onaylanan Belgeler',
             path: '/approved-invoices',
             icon: 'verified_user',
-            roles: ['manager', 'yonetici', 'muhasebe', 'satinalma']
+            roles: ['muhasebe', 'satinalma']
+        },
+        {
+            name: 'Onaylanan Faturalar',
+            path: '/approved-invoices?type=Fatura',
+            icon: 'verified_user',
+            roles: ['manager', 'yonetici']
+        },
+        {
+            name: 'Onaylanan İrsaliyeler',
+            path: '/approved-invoices?type=İrsaliye',
+            icon: 'verified_user',
+            roles: ['manager', 'yonetici']
         },
         {
             name: currentRole === 'satinalma' ? 'İrsaliye Arşivi' : 'Fatura Arşivi',

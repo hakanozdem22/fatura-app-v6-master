@@ -111,7 +111,37 @@ export default function StaffInvoiceUploadDashboard() {
     const [invoiceToDelete, setInvoiceToDelete] = useState<{ id: string, fileUrl: string | undefined } | null>(null);
     const [managers, setManagers] = useState<Manager[]>([]);
     const { user, profile } = useAuth();
+
+    // Normalizasyon fonksiyonu (Türkçe karakter hassasiyetini ortadan kaldırır)
+    const turkishNormalize = (str: string) => {
+        return str
+            .toLowerCase()
+            .replace(/ı/g, 'i')
+            .replace(/ğ/g, 'g')
+            .replace(/ü/g, 'u')
+            .replace(/ş/g, 's')
+            .replace(/ö/g, 'o')
+            .replace(/ç/g, 'c')
+            .replace(/i̇/g, 'i')
+            .trim();
+    };
+
+    // Tarih formatlama fonksiyonu (GG.AA.YYYY)
+    const formatDateInput = (value: string) => {
+        const digits = value.replace(/\D/g, '').substring(0, 8);
+        let formatted = digits;
+        if (digits.length > 2) {
+            formatted = digits.substring(0, 2) + '.' + digits.substring(2);
+        }
+        if (digits.length > 4) {
+            formatted = digits.substring(0, 2) + '.' + digits.substring(2, 4) + '.' + digits.substring(4);
+        }
+        return formatted;
+    };
+
     const userRole = profile?.role?.toLowerCase().trim() || '';
+    const isWaybillRole = userRole.includes('irsaliye');
+    const isFaturaRole = userRole.includes('fatura') || userRole === 'user';
 
     // YENİ: Ön izleme modalı state'leri
     const [showPreviewModal, setShowPreviewModal] = useState(false);
@@ -171,6 +201,19 @@ export default function StaffInvoiceUploadDashboard() {
         }
     }, [user, fetchInvoices, fetchApprovers]);
 
+    // Belge tipi İrsaliye seçildiğinde varsayılan onay amiri olarak Yüksel Koçyiğit'i ata
+    useEffect(() => {
+        if (pendingInvoiceData && pendingInvoiceData.document_type === 'İrsaliye' && !pendingInvoiceData.assigned_manager_id) {
+            const yuksel = managers.find(m => {
+                const normalizedName = turkishNormalize(m.full_name || '');
+                return normalizedName.includes('yuksel') && normalizedName.includes('kocyigit');
+            });
+            if (yuksel) {
+                setPendingInvoiceData(prev => prev ? { ...prev, assigned_manager_id: yuksel.id } : null);
+            }
+        }
+    }, [pendingInvoiceData, managers]);
+
     const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file) return;
@@ -200,9 +243,7 @@ export default function StaffInvoiceUploadDashboard() {
                 .from('invoices-pdfs')
                 .getPublicUrl(filePath);
 
-            const userRole = profile?.role?.toLowerCase().trim() || '';
-            const isWaybillRole = userRole.includes('irsaliye');
-            const isFaturaRole = userRole.includes('fatura') || userRole === 'user';
+            const docType = isWaybillRole ? 'İrsaliye' : (isFaturaRole ? 'Fatura' : '');
 
             setPendingInvoiceData({
                 invoice_no: '',
@@ -212,7 +253,7 @@ export default function StaffInvoiceUploadDashboard() {
                 status: 'Bekliyor',
                 file_url: publicUrl,
                 user_id: user?.id,
-                document_type: isWaybillRole ? 'İrsaliye' : (isFaturaRole ? 'Fatura' : ''),
+                document_type: docType,
                 assigned_manager_id: '',
             });
 
@@ -523,7 +564,10 @@ export default function StaffInvoiceUploadDashboard() {
                                             <input
                                                 type="text"
                                                 value={pendingInvoiceData.submission_date || ''}
-                                                onChange={(e) => setPendingInvoiceData({ ...pendingInvoiceData, submission_date: e.target.value })}
+                                                onChange={(e) => {
+                                                    const formattedDate = formatDateInput(e.target.value);
+                                                    setPendingInvoiceData(prev => prev ? { ...prev, submission_date: formattedDate } : null);
+                                                }}
                                                 placeholder="GG.AA.YYYY"
                                                 className="w-full bg-[#1e293b]/50 border border-slate-700/50 p-3.5 rounded-xl text-[15px] font-black outline-none focus:ring-2 focus:ring-blue-500/50 text-center"
                                             />

@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabaseClient';
 import { Loader2, CheckCircle2, AlertCircle, XCircle, Search, X, Clock } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { logAction } from '../lib/logger';
-import { sendNotification } from '../lib/notificationService';
+import { sendNotification, sendNotificationToRole } from '../lib/notificationService';
 import { PDFDocument } from 'pdf-lib';
 import { v4 as uuidv4 } from 'uuid';
 import { useFileUrl, executeViewFile } from '../hooks/useFileUrl';
@@ -26,6 +26,8 @@ interface Invoice {
     full_name: string;
     avatar_url?: string;
   };
+  approval_note?: string;
+  rejection_note?: string;
 }
 
 export default function ManagerApprovalWorkspace() {
@@ -37,6 +39,7 @@ export default function ManagerApprovalWorkspace() {
   const [searchQuery, setSearchQuery] = useState('');
   const { user, profile } = useAuth();
   const [rejectNote, setRejectNote] = useState('');
+  const [approveNote, setApproveNote] = useState('');
   const [allManagers, setAllManagers] = useState<{ id: string, full_name: string }[]>([]);
   const [showForwardModal, setShowForwardModal] = useState(false);
   const [forwardingInvoice, setForwardingInvoice] = useState<Invoice | null>(null);
@@ -127,9 +130,8 @@ export default function ManagerApprovalWorkspace() {
               stampImage = await pdfDoc.embedJpg(stampImageBytes);
             }
             const pages = pdfDoc.getPages();
-            if (pages.length > 0) {
-              const firstPage = pages[0];
-              const { width } = firstPage.getSize();
+            pages.forEach((page) => {
+              const { width } = page.getSize();
               const maxStampWidth = Math.min(150, width * 0.2);
               const scaleFactor = maxStampWidth / stampImage.width;
               const stampWidth = stampImage.width * scaleFactor;
@@ -141,13 +143,13 @@ export default function ManagerApprovalWorkspace() {
                 safeX = (width - stampWidth) / 2; // Center (Yonetici)
               }
               const safeY = paddingY;
-              firstPage.drawImage(stampImage, {
+              page.drawImage(stampImage, {
                 x: safeX,
                 y: safeY,
                 width: stampWidth,
                 height: stampHeight,
               });
-            }
+            });
             const pdfBytes = await pdfDoc.save();
             const newFileName = `approved_${uuidv4()}.pdf`;
             const pdfBlob = new Blob([pdfBytes.buffer as ArrayBuffer], { type: 'application/pdf' });
@@ -228,17 +230,33 @@ export default function ManagerApprovalWorkspace() {
       const isYonetici = profile?.role === 'yonetici';
       const newStatus = isYonetici ? 'Yönetici Onaylı' : 'Müdür Onaylı';
 
-      const { error } = await supabase
+      let { error: updateError } = await supabase
         .from('invoices')
         .update({
           status: newStatus,
           file_url: finalFileUrl,
           approved_by: user?.id,
-          approved_at: new Date().toISOString()
+          approved_at: new Date().toISOString(),
+          approval_note: approveNote
         })
         .eq('id', selectedInvoice.id);
 
-      if (error) throw error;
+      // FALLBACK: Eğer 'approval_note' kolonu veritabanında yoksa, notsuz güncellemeyi dene
+      if (updateError && (updateError.message?.includes('approval_note') || updateError.code === '42703')) {
+        console.warn("approval_note kolonu bulunamadı, notsuz güncelleniyor.");
+        const { error: retryError } = await supabase
+          .from('invoices')
+          .update({
+            status: newStatus,
+            file_url: finalFileUrl,
+            approved_by: user?.id,
+            approved_at: new Date().toISOString()
+          })
+          .eq('id', selectedInvoice.id);
+        updateError = retryError;
+      }
+
+      if (updateError) throw updateError;
 
       if (isYonetici) {
         // Yöneticiler için yönlendirme modalını aç
@@ -262,6 +280,17 @@ export default function ManagerApprovalWorkspace() {
         undefined
       );
 
+      // BİLDİRİM GÖNDER (Muhasebe/Satın Alma Birimine - Müdür Onayından Sonra)
+      if (!isYonetici) {
+        const targetRole = selectedInvoice.document_type === 'İrsaliye' ? 'satinalma' : 'muhasebe';
+        await sendNotificationToRole({
+          role: targetRole,
+          title: `Yeni ${selectedInvoice.document_type} Onay Bekliyor`,
+          message: `${selectedInvoice.invoice_no} nolu ${selectedInvoice.document_type?.toLowerCase()} müdür ${profile?.full_name} tarafından onaylandı ve sisteminize düştü.`,
+          source_id: selectedInvoice.id
+        });
+      }
+
       // BİLDİRİM GÖNDER (Yükleyen Personele)
       if (selectedInvoice.user_id) {
         await sendNotification({
@@ -272,6 +301,7 @@ export default function ManagerApprovalWorkspace() {
         });
       }
 
+      setApproveNote('');
       setSelectedInvoice(null);
       await fetchPendingInvoices();
     } catch (error: unknown) {
@@ -314,9 +344,8 @@ export default function ManagerApprovalWorkspace() {
               stampImage = await pdfDoc.embedJpg(stampImageBytes);
             }
             const pages = pdfDoc.getPages();
-            if (pages.length > 0) {
-              const firstPage = pages[0];
-              const { width } = firstPage.getSize();
+            pages.forEach((page) => {
+              const { width } = page.getSize();
               const maxStampWidth = Math.min(150, width * 0.2);
               const scaleFactor = maxStampWidth / stampImage.width;
               // stampImage.scale exists in most versions of pdf-lib but let's be safe
@@ -329,13 +358,13 @@ export default function ManagerApprovalWorkspace() {
                 safeX = (width - stampWidth) / 2; // Center (Yonetici)
               }
               const safeY = paddingY;
-              firstPage.drawImage(stampImage, {
+              page.drawImage(stampImage, {
                 x: safeX,
                 y: safeY,
                 width: stampWidth,
                 height: stampHeight,
               });
-            }
+            });
             const pdfBytes = await pdfDoc.save();
             const newFileName = `rejected_${uuidv4()}.pdf`;
             const pdfBlob = new Blob([pdfBytes.buffer as ArrayBuffer], { type: 'application/pdf' });
@@ -748,17 +777,31 @@ export default function ManagerApprovalWorkspace() {
 
             {/* Alt Kısım: Aksiyon Barı (Footer) */}
             <div className="p-4 px-8 bg-[#0f172a] border-t border-slate-800 flex flex-col sm:flex-row items-center gap-6 shadow-2xl">
-              <div className="flex-1 w-full sm:w-auto">
-                <div className="flex items-center gap-3 mb-1">
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest italic">Red Notu / Açıklama</span>
+              <div className="flex-1 w-full sm:w-auto flex flex-col gap-3">
+                <div>
+                  <div className="flex items-center gap-3 mb-1">
+                    <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest italic">Onay Açıklaması</span>
+                  </div>
+                  <input
+                    type="text"
+                    value={approveNote}
+                    onChange={(e) => setApproveNote(e.target.value)}
+                    placeholder="Onaylarken eklemek istediğiniz notu buraya yazabilirsiniz..."
+                    className="w-full bg-emerald-500/5 border border-emerald-500/20 p-2.5 px-4 rounded-xl text-sm font-medium text-white outline-none focus:ring-2 focus:ring-emerald-500/30 transition-all border-l-4 border-l-slate-600 focus:border-l-emerald-500"
+                  />
                 </div>
-                <input
-                  type="text"
-                  value={rejectNote}
-                  onChange={(e) => setRejectNote(e.target.value)}
-                  placeholder="Belgeyi reddedecekseniz nedenini buraya yazabilirsiniz..."
-                  className="w-full bg-[#1e293b]/50 border border-slate-700/50 p-2.5 px-4 rounded-xl text-sm font-medium text-white outline-none focus:ring-2 focus:ring-red-500/30 transition-all border-l-4 border-l-slate-600 focus:border-l-red-500"
-                />
+                <div>
+                  <div className="flex items-center gap-3 mb-1">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest italic">Red Notu / Açıklama</span>
+                  </div>
+                  <input
+                    type="text"
+                    value={rejectNote}
+                    onChange={(e) => setRejectNote(e.target.value)}
+                    placeholder="Belgeyi reddedecekseniz nedenini buraya yazabilirsiniz..."
+                    className="w-full bg-[#1e293b]/50 border border-slate-700/50 p-2.5 px-4 rounded-xl text-sm font-medium text-white outline-none focus:ring-2 focus:ring-red-500/30 transition-all border-l-4 border-l-slate-600 focus:border-l-red-500"
+                  />
+                </div>
               </div>
 
               <div className="flex items-center gap-4 shrink-0">

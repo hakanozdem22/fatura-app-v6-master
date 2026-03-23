@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { Loader2, CheckCircle2, Search, Trash2, AlertTriangle, X, FileText } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -22,10 +23,13 @@ interface Invoice {
     user_id?: string;
     created_at?: string;
     rejection_note?: string;
+    approval_note?: string;
     assigned_manager_id?: string;
 }
 
 export default function ApprovedInvoicesScreen() {
+    const [searchParams] = useSearchParams();
+    const docType = searchParams.get('type');
     const [invoices, setInvoices] = useState<Invoice[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -64,6 +68,7 @@ export default function ApprovedInvoicesScreen() {
                 // Müdür hem tamamen onaylanmışları hem de kendi onaylayıp muhasebe/satın alma bekleyenleri görsün
                 query = query.in('status', ['Onaylandı', 'Müdür Onaylı']);
                 if (user?.id) query = query.eq('approved_by', user.id);
+                if (docType) query = query.eq('document_type', docType);
             } else {
                 query = query.eq('status', 'Onaylandı');
             }
@@ -80,7 +85,7 @@ export default function ApprovedInvoicesScreen() {
         } finally {
             setIsLoading(false);
         }
-    }, [user?.id, isMuhasebe, isManager, isSatinalma]);
+    }, [user?.id, isMuhasebe, isManager, isSatinalma, docType]);
 
     useEffect(() => {
         fetchApprovedInvoices();
@@ -114,9 +119,9 @@ export default function ApprovedInvoicesScreen() {
                     setActionStatus({ type: 'idle', message: 'Onay kaşesi ekleniyor (PDF)...' });
                     try {
                         const existingPdfBytes = await fetch(sourceFetchUrl).then(res => res.arrayBuffer());
-                        const stampImageBytes = await fetch(stampUrl).then(res => res.arrayBuffer());
                         const pdfDoc = await PDFDocument.load(existingPdfBytes);
-
+                        const pages = pdfDoc.getPages();
+                        const stampImageBytes = await fetch(stampUrl).then(res => res.arrayBuffer());
                         let stampImage;
                         if (stampUrl.toLowerCase().includes('.png')) {
                             stampImage = await pdfDoc.embedPng(stampImageBytes);
@@ -124,25 +129,21 @@ export default function ApprovedInvoicesScreen() {
                             stampImage = await pdfDoc.embedJpg(stampImageBytes);
                         }
 
-                        const pages = pdfDoc.getPages();
-                        if (pages.length > 0) {
-                            const firstPage = pages[0];
-                            const { width } = firstPage.getSize();
+                        pages.forEach((page) => {
+                            const { width } = page.getSize();
                             const maxStampWidth = Math.min(150, width * 0.2);
                             const scaleFactor = maxStampWidth / stampImage.width;
                             const stampWidth = stampImage.width * scaleFactor;
                             const stampHeight = stampImage.height * scaleFactor;
-
                             const safeX = 40;
                             const safeY = 40;
-
-                            firstPage.drawImage(stampImage, {
+                            page.drawImage(stampImage, {
                                 x: safeX,
                                 y: safeY,
                                 width: stampWidth,
                                 height: stampHeight,
                             });
-                        }
+                        });
 
                         const pdfBytes = await pdfDoc.save();
                         const safeInvoiceNo = selectedInvoice.invoice_no.replace(/[^a-zA-Z0-9_-]/g, '_');
@@ -305,26 +306,26 @@ export default function ApprovedInvoicesScreen() {
                     setActionStatus({ type: 'idle', message: 'Ret kaşesi ekleniyor (PDF)...' });
                     try {
                         const existingPdfBytes = await fetch(sourceFetchUrl).then(res => res.arrayBuffer());
-                        const stampImageBytes = await fetch(stampUrl).then(res => res.arrayBuffer());
                         const pdfDoc = await PDFDocument.load(existingPdfBytes);
+                        const pages = pdfDoc.getPages();
+                        const stampImageBytes = await fetch(stampUrl).then(res => res.arrayBuffer());
                         let stampImage;
                         if (stampUrl.toLowerCase().includes('.png')) {
                             stampImage = await pdfDoc.embedPng(stampImageBytes);
                         } else {
                             stampImage = await pdfDoc.embedJpg(stampImageBytes);
                         }
-                        const pages = pdfDoc.getPages();
-                        if (pages.length > 0) {
-                            const firstPage = pages[0];
-                            const { width } = firstPage.getSize();
+
+                        pages.forEach(page => {
+                            const { width } = page.getSize();
                             const maxStampWidth = Math.min(150, width * 0.2);
                             const scaleFactor = maxStampWidth / stampImage.width;
                             const stampWidth = stampImage.width * scaleFactor;
                             const stampHeight = stampImage.height * scaleFactor;
                             const safeX = 40;
                             const safeY = 40;
-                            firstPage.drawImage(stampImage, { x: safeX, y: safeY, width: stampWidth, height: stampHeight });
-                        }
+                            page.drawImage(stampImage, { x: safeX, y: safeY, width: stampWidth, height: stampHeight });
+                        });
                         const pdfBytes = await pdfDoc.save();
                         const safeInvoiceNo = selectedInvoice.invoice_no.replace(/[^a-zA-Z0-9_-]/g, '_');
                         const r2Folder = selectedInvoice.document_type === 'İrsaliye' ? 'irsaliyeler' : 'faturalar';
@@ -526,14 +527,14 @@ export default function ApprovedInvoicesScreen() {
         <div className="mx-auto flex w-full max-w-[1450px] flex-col gap-8 px-8 pb-8 pt-2">
             <header className="flex flex-col gap-1">
                 <h2 className="text-3xl font-bold text-slate-900 dark:text-white">
-                    {isMuhasebe ? 'Alım Onaylı Faturalar' : isSatinalma ? 'Müdür Onaylı İrsaliyeler' : 'Onaylanan Belgeler'}
+                    {isMuhasebe ? 'Alım Onaylı Faturalar' : (isSatinalma ? 'Müdür Onaylı İrsaliyeler' : (isManager && docType === 'Fatura' ? 'Onaylanan Faturalar' : (isManager && docType === 'İrsaliye' ? 'Onaylanan İrsaliyeler' : 'Onaylanan Belgeler')))}
                 </h2>
                 <p className="text-slate-500 dark:text-slate-400">
                     {isMuhasebe
                         ? 'Sistemde onay sürecinde olan tüm faturaları buradan görüntüleyebilirsiniz'
                         : isSatinalma
                             ? 'Sistemde onay sürecinde olan tüm irsaliyeleri buradan görüntüleyebilirsiniz'
-                            : 'Sistemde onay sürecinde olan veya onaylanmış tüm belgeleri buradan görüntüleyebilir ve arayabilirsiniz.'}
+                            : (isManager && docType === 'Fatura' ? 'Onayladığınız tüm faturaları buradan görüntüleyebilirsiniz' : (isManager && docType === 'İrsaliye' ? 'Onayladığınız tüm irsaliyeleri buradan görüntüleyebilirsiniz' : 'Sistemde onay sürecinde olan veya onaylanmış tüm belgeleri buradan görüntüleyebilir ve arayabilirsiniz.'))}
                 </p>
             </header>
 
@@ -553,7 +554,7 @@ export default function ApprovedInvoicesScreen() {
                 <div className="flex items-center gap-3">
                     <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 rounded-lg border border-emerald-200 dark:border-emerald-800/50">
                         <CheckCircle2 size={18} />
-                        <span className="font-medium text-sm">Toplam {invoices.length} {profile?.role === 'satinalma' ? 'Onaylı İrsaliye' : 'Onaylı Fatura'}</span>
+                        <span className="font-medium text-sm">Toplam {invoices.length} {isSatinalma || docType === 'İrsaliye' ? 'Onaylı İrsaliye' : 'Onaylı Fatura'}</span>
                     </div>
                 </div>
             </div>
@@ -565,10 +566,10 @@ export default function ApprovedInvoicesScreen() {
                             <tr>
                                 <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center">Şirket/Firma</th>
                                 <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center">
-                                    {isMuhasebe ? 'Fatura No' : (isSatinalma ? 'İrsaliye No' : (isManager || rawRole === 'fatura_irsaliye' ? 'Fatura / İrsaliye No' : 'Belge No'))}
+                                    {isMuhasebe || docType === 'Fatura' ? 'Fatura No' : (isSatinalma || docType === 'İrsaliye' ? 'İrsaliye No' : 'Belge No')}
                                 </th>
                                 <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center">
-                                    {isMuhasebe ? 'Fatura Tarihi' : (isSatinalma ? 'İrsaliye Tarihi' : (isManager || rawRole === 'fatura_irsaliye' ? 'Fatura / İrsaliye Tarihi' : 'Belge Tarihi'))}
+                                    {isMuhasebe || docType === 'Fatura' ? 'Fatura Tarihi' : (isSatinalma || docType === 'İrsaliye' ? 'İrsaliye Tarihi' : 'Belge Tarihi')}
                                 </th>
                                 <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center">Yükleme Tarihi</th>
                                 <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center">Onay Tarihi</th>
@@ -590,7 +591,7 @@ export default function ApprovedInvoicesScreen() {
                                     <td colSpan={7} className="px-6 py-12 text-center">
                                         <div className="flex flex-col items-center justify-center">
                                             <CheckCircle2 size={40} className="text-emerald-400/50 mb-3" />
-                                            <p className="text-slate-500 font-medium">{profile?.role === 'satinalma' ? 'İrsaliye bulunamadı.' : 'Fatura bulunamadı.'}</p>
+                                            <p className="text-slate-500 font-medium">{isSatinalma || docType === 'İrsaliye' ? 'İrsaliye bulunamadı.' : 'Fatura bulunamadı.'}</p>
                                         </div>
                                     </td>
                                 </tr>
@@ -642,13 +643,15 @@ export default function ApprovedInvoicesScreen() {
                                                 ) : (
                                                     <span className="text-slate-300 dark:text-slate-700 w-9 text-center">-</span>
                                                 )}
-                                                <button
-                                                    onClick={() => handleDeleteClick(invoice.id, invoice.invoice_no)}
-                                                    className="inline-flex items-center justify-center p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                                                    title="Sil"
-                                                >
-                                                    <Trash2 size={18} />
-                                                </button>
+                                                {!isManager && (
+                                                    <button
+                                                        onClick={() => handleDeleteClick(invoice.id, invoice.invoice_no)}
+                                                        className="inline-flex items-center justify-center p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                                        title="Sil"
+                                                    >
+                                                        <Trash2 size={18} />
+                                                    </button>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>
@@ -763,7 +766,7 @@ export default function ApprovedInvoicesScreen() {
                                                     <FileText size={20} />
                                                 </div>
                                                 <div>
-                                                    <h3 className="text-lg font-bold text-slate-900 dark:text-white leading-tight">Belge Detayı & Muhasebe Onayı</h3>
+                                                    <h3 className="text-lg font-bold text-slate-900 dark:text-white leading-tight">Belge Detayı & {isSatinalma || (selectedInvoice.document_type === 'İrsaliye') ? 'Satın Alma' : 'Muhasebe'} Onayı</h3>
                                                     <p className="text-xs text-slate-500 mt-1">#{selectedInvoice.invoice_no} - {selectedInvoice.company_name}</p>
                                                 </div>
                                             </div>
@@ -787,7 +790,7 @@ export default function ApprovedInvoicesScreen() {
                                                     ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400'
                                                     : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400'}`}>
                                                 <div className={`w-2 h-2 rounded-full ${selectedInvoice.status === 'Müdür Onaylı' ? 'bg-amber-500' : 'bg-emerald-500'}`}></div>
-                                                {selectedInvoice.status === 'Müdür Onaylı' ? `${isSatinalma ? 'Satınalma' : 'Muhasebe'} Onayı Bekliyor` : 'Onaylandı'}
+                                                {selectedInvoice.status === 'Müdür Onaylı' ? `${isSatinalma || selectedInvoice.document_type === 'İrsaliye' ? 'Satın Alma' : 'Muhasebe'} Onayı Bekliyor` : 'Onaylandı'}
                                             </div>
                                         </div>
 
@@ -801,6 +804,12 @@ export default function ApprovedInvoicesScreen() {
                                                 <p className="text-xs text-slate-400 mb-1">Belge No / Tarih</p>
                                                 <p className="font-bold text-slate-900 dark:text-white">{selectedInvoice.invoice_no} / {new Date(selectedInvoice.submission_date).toLocaleDateString('tr-TR')}</p>
                                             </div>
+                                            {selectedInvoice.approval_note && (
+                                                <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl border border-emerald-100 dark:border-emerald-800 animate-in slide-in-from-top-2 duration-300">
+                                                    <p className="text-xs text-emerald-600 dark:text-emerald-400 mb-1 font-bold uppercase tracking-wider">Onay Açıklaması</p>
+                                                    <p className="text-sm text-emerald-700 dark:text-emerald-300 font-medium leading-relaxed">{selectedInvoice.approval_note}</p>
+                                                </div>
+                                            )}
                                             {selectedInvoice.rejection_note && (
                                                 <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-2xl border border-red-100 dark:border-red-800 animate-in slide-in-from-top-2 duration-300">
                                                     <p className="text-xs text-red-600 dark:text-red-400 mb-1 font-bold uppercase tracking-wider">Ret Nedeni</p>
