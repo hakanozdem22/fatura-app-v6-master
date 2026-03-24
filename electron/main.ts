@@ -18,6 +18,13 @@ let mainWindow: BrowserWindow | null = null;
 autoUpdater.autoDownload = true;
 autoUpdater.autoInstallOnAppQuit = true;
 
+// Explicitly set feed URL for GitHub
+autoUpdater.setFeedURL({
+  provider: 'github',
+  owner: 'hakanozdem22',
+  repo: 'fatura-app-v6-master'
+});
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1550,
