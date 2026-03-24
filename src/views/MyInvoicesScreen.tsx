@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import { executeViewFile } from '../hooks/useFileUrl';
-import { Loader2, Search, FileText } from 'lucide-react';
+import { Loader2, Search, FileText, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 
 interface Invoice {
     id: string;
@@ -16,6 +16,7 @@ interface Invoice {
     created_at?: string;
     rejection_note?: string;
     rejected_by_id?: string;
+    approval_note?: string;
     rejector?: {
         full_name: string;
         role?: string;
@@ -42,11 +43,27 @@ export default function MyInvoicesScreen() {
     const [statusFilter, setStatusFilter] = useState<string>('Tümü');
     const [startDate, setStartDate] = useState<string>('');
     const [endDate, setEndDate] = useState<string>('');
+    const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({
+        key: 'created_at',
+        direction: 'desc'
+    });
 
     // Ret nedeni modalı için state
     const [isReasonModalOpen, setIsReasonModalOpen] = useState(false);
     const [selectedNote, setSelectedNote] = useState('');
     const [selectedRejectorName, setSelectedRejectorName] = useState('');
+
+    const handleSort = (key: string) => {
+        setSortConfig(prev => ({
+            key,
+            direction: prev.key === key && prev.direction === 'desc' ? 'asc' : 'desc'
+        }));
+    };
+
+    const SortIcon = ({ columnKey }: { columnKey: string }) => {
+        if (sortConfig.key !== columnKey) return <ChevronsUpDown size={16} className="ml-1 opacity-20 group-hover:opacity-50 transition-opacity" />;
+        return sortConfig.direction === 'asc' ? <ChevronUp size={16} className="ml-1 text-primary stroke-[2.5]" /> : <ChevronDown size={16} className="ml-1 text-primary stroke-[2.5]" />;
+    };
 
     const fetchMyInvoices = useCallback(async () => {
         if (!user) return;
@@ -110,18 +127,57 @@ export default function MyInvoicesScreen() {
         }
 
         return matchesStatus && matchesSearch && matchesDate;
+    }).sort((a, b) => {
+        const { key, direction } = sortConfig;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let aValue: any = a[key as keyof Invoice];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let bValue: any = b[key as keyof Invoice];
+
+        if (aValue === bValue) return 0;
+        if (aValue == null) return 1;
+        if (bValue == null) return -1;
+
+        if (typeof aValue === 'string' && typeof bValue === 'string') {
+            if (key.includes('date') || key.includes('_at')) {
+                aValue = new Date(aValue).getTime();
+                bValue = new Date(bValue).getTime();
+            } else {
+                return direction === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+            }
+        }
+
+        if (aValue < bValue) return direction === 'asc' ? -1 : 1;
+        if (aValue > bValue) return direction === 'asc' ? 1 : -1;
+        return 0;
     });
 
     const StatusBadge = ({ invoice }: { invoice: Invoice }) => {
         const status = invoice.status;
+        const note = invoice.approval_note;
+
+        const renderNote = () => note && (
+            <span className="text-[10px] text-slate-500 font-medium italic">
+                ({note})
+            </span>
+        );
+
         if (status === 'Onaylandı') {
-            return <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">Arşivlendi</span>;
+            return (
+                <div className="flex flex-col items-center gap-1">
+                    <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">Arşivlendi</span>
+                    {renderNote()}
+                </div>
+            );
         }
         if (status === 'Müdür Onaylı') {
             return (
-                <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
-                    {invoice.document_type === 'İrsaliye' ? 'Onay Bekliyor (Satın Alma)' : 'Onay Bekliyor (Muhasebe)'}
-                </span>
+                <div className="flex flex-col items-center gap-1">
+                    <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+                        {invoice.document_type === 'İrsaliye' ? 'Satın Alma Onayında' : 'Muhasebe Onayında'}
+                    </span>
+                    {renderNote()}
+                </div>
             );
         }
         if (status === 'Bekliyor') {
@@ -220,16 +276,30 @@ export default function MyInvoicesScreen() {
                     <table className="w-full text-left text-sm">
                         <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
                             <tr>
-                                <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center min-w-[200px]">Şirket/Firma</th>
-                                <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center min-w-[120px]">Belge Tipi</th>
-                                <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center min-w-[160px]">
-                                    {profile?.role === 'fatura_irsaliye' ? 'Fatura / İrsaliye No' : (profile?.role === 'irsaliye' || profile?.role === 'satinalma' ? 'İrsaliye No' : 'Fatura No')}
+                                <th onClick={() => handleSort('company_name')} className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center min-w-[200px] cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group">
+                                    <div className="flex items-center justify-center">Şirket/Firma <SortIcon columnKey="company_name" /></div>
                                 </th>
-                                <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center">
-                                    {profile?.role === 'fatura_irsaliye' ? 'Fatura / İrsaliye Tarihi' : (profile?.role === 'irsaliye' || profile?.role === 'satinalma' ? 'İrsaliye Tarihi' : 'Fatura Tarihi')}
+                                <th onClick={() => handleSort('document_type')} className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center min-w-[120px] cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group">
+                                    <div className="flex items-center justify-center">Belge Tipi <SortIcon columnKey="document_type" /></div>
                                 </th>
-                                <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center">Yükleme Tarihi</th>
-                                <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center">Durum</th>
+                                <th onClick={() => handleSort('invoice_no')} className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center min-w-[160px] cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group">
+                                    <div className="flex items-center justify-center">
+                                        {profile?.role === 'fatura_irsaliye' ? 'Fatura / İrsaliye No' : (profile?.role?.toLowerCase().includes('irsaliye') || profile?.role === 'satinalma' ? 'İrsaliye No' : 'Fatura No')}
+                                        <SortIcon columnKey="invoice_no" />
+                                    </div>
+                                </th>
+                                <th onClick={() => handleSort('submission_date')} className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group">
+                                    <div className="flex items-center justify-center">
+                                        {profile?.role === 'fatura_irsaliye' ? 'Fatura / İrsaliye Tarihi' : (profile?.role?.toLowerCase().includes('irsaliye') || profile?.role === 'satinalma' ? 'İrsaliye Tarihi' : 'Fatura Tarihi')}
+                                        <SortIcon columnKey="submission_date" />
+                                    </div>
+                                </th>
+                                <th onClick={() => handleSort('created_at')} className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group">
+                                    <div className="flex items-center justify-center">Yükleme Tarihi <SortIcon columnKey="created_at" /></div>
+                                </th>
+                                <th onClick={() => handleSort('status')} className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group">
+                                    <div className="flex items-center justify-center">Durum <SortIcon columnKey="status" /></div>
+                                </th>
                                 <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center pr-10">İşlem</th>
                             </tr>
                         </thead>

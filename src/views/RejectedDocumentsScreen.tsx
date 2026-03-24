@@ -551,7 +551,7 @@ export default function RejectedDocumentsScreen() {
                             </div>
                             <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Onaylıyor musunuz?</h3>
                             <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
-                                <span className="font-bold text-slate-700 dark:text-slate-200">{confirmModal.invoice?.invoice_no}</span> numaralı belgeyi yeniden onaylayarak arşive göndermek üzeresiniz.
+                                <span className="font-bold text-slate-700 dark:text-slate-200">{confirmModal.invoice?.invoice_no}</span> numaralı belgeyi alım onaylı faturalar bölümüne göndermek üzeresiniz.
                             </p>
                         </div>
                         <div className="p-4 bg-slate-50 dark:bg-slate-800/50 flex gap-3">

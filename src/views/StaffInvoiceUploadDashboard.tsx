@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import { FileUp, Loader2, CheckCircle2, AlertCircle, ChevronDown } from 'lucide-react';
+import { FileUp, Loader2, CheckCircle2, AlertCircle, ChevronDown, ChevronUp, ChevronsUpDown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { logAction } from '../lib/logger';
 import { sendNotification } from '../lib/notificationService';
@@ -18,6 +18,7 @@ interface Invoice {
     user_id?: string;
     document_type?: string;
     assigned_manager_id?: string;
+    approval_note?: string; // NEW column
     created_at?: string;
     rejection_note?: string;
 }
@@ -139,9 +140,26 @@ export default function StaffInvoiceUploadDashboard() {
         return formatted;
     };
 
+    const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({
+        key: 'created_at',
+        direction: 'desc'
+    });
+
+    const handleSort = (key: string) => {
+        setSortConfig(prev => ({
+            key,
+            direction: prev.key === key && prev.direction === 'desc' ? 'asc' : 'desc'
+        }));
+    };
+
+    const SortIcon = ({ columnKey }: { columnKey: string }) => {
+        if (sortConfig.key !== columnKey) return <ChevronsUpDown size={16} className="ml-1 opacity-20 group-hover:opacity-50 transition-opacity" />;
+        return sortConfig.direction === 'asc' ? <ChevronUp size={16} className="ml-1 text-primary stroke-[2.5]" /> : <ChevronDown size={16} className="ml-1 text-primary stroke-[2.5]" />;
+    };
+
     const userRole = profile?.role?.toLowerCase().trim() || '';
-    const isWaybillRole = userRole.includes('irsaliye');
-    const isFaturaRole = userRole.includes('fatura') || userRole === 'user';
+    const isWaybillRole = userRole.includes('irsaliye') || userRole === 'satinalma' || userRole === 'fatura_irsaliye';
+    const isFaturaRole = userRole.includes('fatura') || userRole === 'user' || userRole === 'muhasebe' || userRole === 'fatura_irsaliye';
 
     // YENİ: Ön izleme modalı state'leri
     const [showPreviewModal, setShowPreviewModal] = useState(false);
@@ -201,18 +219,24 @@ export default function StaffInvoiceUploadDashboard() {
         }
     }, [user, fetchInvoices, fetchApprovers]);
 
-    // Belge tipi İrsaliye seçildiğinde varsayılan onay amiri olarak Yüksel Koçyiğit'i ata
+    // Belge tipi İrsaliye (veya fatura_irsaliye rolü için Fatura) seçildiğinde varsayılan onay amiri olarak Yüksel Koçyiğit'i ata
     useEffect(() => {
-        if (pendingInvoiceData && pendingInvoiceData.document_type === 'İrsaliye' && !pendingInvoiceData.assigned_manager_id) {
-            const yuksel = managers.find(m => {
-                const normalizedName = turkishNormalize(m.full_name || '');
-                return normalizedName.includes('yuksel') && normalizedName.includes('kocyigit');
-            });
-            if (yuksel) {
-                setPendingInvoiceData(prev => prev ? { ...prev, assigned_manager_id: yuksel.id } : null);
+        if (pendingInvoiceData && !pendingInvoiceData.assigned_manager_id) {
+            const shouldSetDefault =
+                pendingInvoiceData.document_type === 'İrsaliye' ||
+                ((userRole === 'fatura_irsaliye' || userRole === 'satinalma') && pendingInvoiceData.document_type === 'Fatura');
+
+            if (shouldSetDefault) {
+                const yuksel = managers.find(m => {
+                    const normalizedName = turkishNormalize(m.full_name || '');
+                    return normalizedName.includes('yuksel') && normalizedName.includes('kocyigit');
+                });
+                if (yuksel) {
+                    setPendingInvoiceData(prev => prev ? { ...prev, assigned_manager_id: yuksel.id } : null);
+                }
             }
         }
-    }, [pendingInvoiceData, managers]);
+    }, [pendingInvoiceData, managers, userRole]);
 
     const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -243,7 +267,7 @@ export default function StaffInvoiceUploadDashboard() {
                 .from('invoices-pdfs')
                 .getPublicUrl(filePath);
 
-            const docType = isWaybillRole ? 'İrsaliye' : (isFaturaRole ? 'Fatura' : '');
+            const docType = userRole === 'fatura_irsaliye' ? 'Fatura' : (isWaybillRole ? 'İrsaliye' : (isFaturaRole ? 'Fatura' : ''));
 
             setPendingInvoiceData({
                 invoice_no: '',
@@ -405,18 +429,33 @@ export default function StaffInvoiceUploadDashboard() {
     };
 
     const StatusBadge = ({ invoice }: { invoice: Invoice }) => {
-        const { status, document_type } = invoice;
+        const { status, document_type, approval_note } = invoice;
+
+        const renderNote = () => approval_note && (
+            <span className="text-[10px] text-slate-500 font-medium italic">
+                ({approval_note})
+            </span>
+        );
+
         switch (status) {
             case 'Bekliyor':
                 return <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">Onay Bekliyor</span>;
             case 'Müdür Onaylı':
                 return (
-                    <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
-                        {document_type === 'İrsaliye' ? 'Onay Bekliyor (Satın Alma)' : 'Onay Bekliyor (Muhasebe)'}
-                    </span>
+                    <div className="flex flex-col items-center gap-1">
+                        <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+                            {document_type === 'İrsaliye' ? 'Onay Bekliyor (Satın Alma)' : 'Onay Bekliyor (Muhasebe)'}
+                        </span>
+                        {renderNote()}
+                    </div>
                 );
             case 'Onaylandı':
-                return <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">Arşivlendi</span>;
+                return (
+                    <div className="flex flex-col items-center gap-1">
+                        <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">Arşivlendi</span>
+                        {renderNote()}
+                    </div>
+                );
             case 'Reddedildi':
                 return <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800 dark:bg-red-900/30 dark:text-red-400">Reddedildi</span>;
             default:
@@ -726,17 +765,29 @@ export default function StaffInvoiceUploadDashboard() {
                             <table className="w-full min-w-[600px] text-left text-sm">
                                 <thead className="border-b border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-800/50">
                                     <tr>
-                                        <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center">Şirket/Firma</th>
-                                        <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center">Belge Tipi</th>
-                                        <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center">
-                                            {profile?.role?.toLowerCase().includes('irsaliye') ? 'İrsaliye No' : (profile?.role?.toLowerCase().includes('fatura') ? 'Fatura No' : 'Belge No')}
+                                        <th onClick={() => handleSort('company_name')} className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group whitespace-nowrap">
+                                            <div className="flex items-center justify-center">Şirket/Firma <SortIcon columnKey="company_name" /></div>
                                         </th>
-                                        <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center">
-                                            {profile?.role?.toLowerCase().includes('irsaliye') ? 'İrsaliye Tarihi' : (profile?.role?.toLowerCase().includes('fatura') ? 'Fatura Tarihi' : 'Belge Tarihi')}
+                                        <th onClick={() => handleSort('document_type')} className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group whitespace-nowrap">
+                                            <div className="flex items-center justify-center">Belge Tipi <SortIcon columnKey="document_type" /></div>
                                         </th>
-                                        <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center">Yükleme Tarihi</th>
-                                        <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center">Durum</th>
-                                        <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center">İşlem</th>
+                                        <th onClick={() => handleSort('invoice_no')} className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group whitespace-nowrap">
+                                            <div className="flex items-center justify-center">
+                                                {profile?.role?.toLowerCase().includes('irsaliye') ? 'İrsaliye No' : (profile?.role?.toLowerCase().includes('fatura') || profile?.role === 'user' ? 'Fatura No' : 'Belge No')}
+                                                <SortIcon columnKey="invoice_no" />
+                                            </div>
+                                        </th>
+                                        <th onClick={() => handleSort('submission_date')} className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group whitespace-nowrap">
+                                            <div className="flex items-center justify-center">
+                                                {profile?.role?.toLowerCase().includes('irsaliye') ? 'İrsaliye Tarihi' : (profile?.role?.toLowerCase().includes('fatura') || profile?.role === 'user' ? 'Fatura Tarihi' : 'Belge Tarihi')}
+                                                <SortIcon columnKey="submission_date" />
+                                            </div>
+                                        </th>
+                                        <th onClick={() => handleSort('created_at')} className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group whitespace-nowrap">
+                                            <div className="flex items-center justify-center">Yükleme Tarihi <SortIcon columnKey="created_at" /></div>
+                                        </th>
+                                        <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center whitespace-nowrap">Durum</th>
+                                        <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center whitespace-nowrap">İşlem</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
@@ -755,54 +806,79 @@ export default function StaffInvoiceUploadDashboard() {
                                             </td>
                                         </tr>
                                     ) : (
-                                        invoices.map((invoice) => (
-                                            <tr key={invoice.id} className="group hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                                                <td className="px-6 py-4 font-medium text-slate-900 dark:text-white text-left">
-                                                    {invoice.company_name || <span className="text-slate-400 italic">Bilinmiyor</span>}
-                                                </td>
-                                                <td className="px-6 py-4 text-center">
-                                                    <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium border ${invoice.document_type === 'İrsaliye'
-                                                        ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800/50'
-                                                        : 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800/50'
-                                                        }`}>
-                                                        {invoice.document_type || 'Belirtilmedi'}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4 font-medium text-slate-500 dark:text-slate-400 text-center">{invoice.invoice_no}</td>
-                                                <td className="px-6 py-4 text-slate-500 dark:text-slate-400 text-center">
-                                                    {new Date(invoice.submission_date).toLocaleDateString('tr-TR')}
-                                                </td>
-                                                <td className="px-6 py-4 font-medium text-slate-900 dark:text-white text-center">
-                                                    {new Date(invoice.created_at || invoice.submission_date).toLocaleDateString('tr-TR')}
-                                                </td>
-                                                <td className="px-6 py-4 text-center">
-                                                    <div className="flex flex-col items-center gap-1">
-                                                        <StatusBadge invoice={invoice} />
-                                                        {invoice.status === 'Reddedildi' && invoice.rejection_note && (
-                                                            <span className="text-[10px] text-red-500 font-medium max-w-[120px] truncate" title={invoice.rejection_note}>
-                                                                {invoice.rejection_note}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 text-center">
-                                                    <div className="flex items-center justify-end gap-2">
-                                                        {invoice.file_url && (
-                                                            <button onClick={() => executeViewFile(invoice.file_url)} className="text-slate-400 hover:text-primary dark:hover:text-primary transition-colors inline-block" title="Dosyayı Gör">
-                                                                <span className="material-symbols-outlined text-[20px]">visibility</span>
+                                        invoices
+                                            .sort((a, b) => {
+                                                const { key, direction } = sortConfig;
+                                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                                let aValue: any = a[key as keyof Invoice];
+                                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                                let bValue: any = b[key as keyof Invoice];
+
+                                                if (aValue === bValue) return 0;
+                                                if (aValue == null) return 1;
+                                                if (bValue == null) return -1;
+
+                                                if (typeof aValue === 'string' && typeof bValue === 'string') {
+                                                    if (key.includes('date') || key.includes('_at')) {
+                                                        aValue = new Date(aValue).getTime();
+                                                        bValue = new Date(bValue).getTime();
+                                                    } else {
+                                                        return direction === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+                                                    }
+                                                }
+
+                                                if (aValue < bValue) return direction === 'asc' ? -1 : 1;
+                                                if (aValue > bValue) return direction === 'asc' ? 1 : -1;
+                                                return 0;
+                                            })
+                                            .map((invoice) => (
+                                                <tr key={invoice.id} className="group hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                                                    <td className="px-6 py-4 font-medium text-slate-900 dark:text-white text-left">
+                                                        {invoice.company_name || <span className="text-slate-400 italic">Bilinmiyor</span>}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-center">
+                                                        <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium border ${invoice.document_type === 'İrsaliye'
+                                                            ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800/50'
+                                                            : 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800/50'
+                                                            }`}>
+                                                            {invoice.document_type || 'Belirtilmedi'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4 font-medium text-slate-500 dark:text-slate-400 text-center">{invoice.invoice_no}</td>
+                                                    <td className="px-6 py-4 text-slate-500 dark:text-slate-400 text-center">
+                                                        {new Date(invoice.submission_date).toLocaleDateString('tr-TR')}
+                                                    </td>
+                                                    <td className="px-6 py-4 font-medium text-slate-900 dark:text-white text-center">
+                                                        {new Date(invoice.created_at || invoice.submission_date).toLocaleDateString('tr-TR')}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-center">
+                                                        <div className="flex flex-col items-center gap-1">
+                                                            <StatusBadge invoice={invoice} />
+                                                            {invoice.status === 'Reddedildi' && invoice.rejection_note && (
+                                                                <span className="text-[10px] text-red-500 font-medium max-w-[120px] truncate" title={invoice.rejection_note}>
+                                                                    {invoice.rejection_note}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-center">
+                                                        <div className="flex items-center justify-end gap-2">
+                                                            {invoice.file_url && (
+                                                                <button onClick={() => executeViewFile(invoice.file_url)} className="text-slate-400 hover:text-primary dark:hover:text-primary transition-colors inline-block" title="Dosyayı Gör">
+                                                                    <span className="material-symbols-outlined text-[20px]">visibility</span>
+                                                                </button>
+                                                            )}
+                                                            <button
+                                                                onClick={() => handleDeleteClick(invoice.id, invoice.file_url)}
+                                                                className="text-slate-400 hover:text-red-500 transition-colors inline-block"
+                                                                title="Faturayı Sil"
+                                                            >
+                                                                <span className="material-symbols-outlined text-[20px]">delete</span>
                                                             </button>
-                                                        )}
-                                                        <button
-                                                            onClick={() => handleDeleteClick(invoice.id, invoice.file_url)}
-                                                            className="text-slate-400 hover:text-red-500 transition-colors inline-block"
-                                                            title="Faturayı Sil"
-                                                        >
-                                                            <span className="material-symbols-outlined text-[20px]">delete</span>
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))
                                     )}
                                 </tbody>
                             </table>

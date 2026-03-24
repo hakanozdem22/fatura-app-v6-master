@@ -4,7 +4,7 @@ import { Loader2, CheckCircle2, AlertCircle, XCircle, Search, X, Clock } from 'l
 import { useAuth } from '../context/AuthContext';
 import { logAction } from '../lib/logger';
 import { sendNotification, sendNotificationToRole } from '../lib/notificationService';
-import { PDFDocument } from 'pdf-lib';
+import { PDFDocument, PDFImage } from 'pdf-lib';
 import { v4 as uuidv4 } from 'uuid';
 import { useFileUrl, executeViewFile } from '../hooks/useFileUrl';
 import { getPresignedUrlFromR2 } from '../lib/r2Storage';
@@ -129,6 +129,27 @@ export default function ManagerApprovalWorkspace() {
             } else {
               stampImage = await pdfDoc.embedJpg(stampImageBytes);
             }
+
+            // NOT KAŞESİ OLUŞTURMA (Türkçe karakter desteği için canvas kullanıyoruz)
+            let noteImage: PDFImage | undefined;
+            if (approveNote) {
+              const noteCanvas = document.createElement('canvas');
+              const nCtx = noteCanvas.getContext('2d');
+              if (nCtx) {
+                nCtx.font = 'bold 24px Arial';
+                const textWidth = nCtx.measureText(approveNote).width;
+                noteCanvas.width = textWidth + 20;
+                noteCanvas.height = 40;
+                nCtx.font = 'bold 24px Arial';
+                nCtx.fillStyle = '#b91c1c'; // emerald-700 / koyu kırmızı renk (kaşe rengi)
+                nCtx.textBaseline = 'middle';
+                nCtx.fillText(approveNote, 10, 20);
+                const noteBlob: Blob = await new Promise(resolve => noteCanvas.toBlob(b => resolve(b!), 'image/png'));
+                const noteArrayBuffer = await noteBlob.arrayBuffer();
+                noteImage = await pdfDoc.embedPng(noteArrayBuffer);
+              }
+            }
+
             const pages = pdfDoc.getPages();
             pages.forEach((page) => {
               const { width } = page.getSize();
@@ -149,6 +170,18 @@ export default function ManagerApprovalWorkspace() {
                 width: stampWidth,
                 height: stampHeight,
               });
+
+              // Onay notunu kaşenin altına ekle
+              if (noteImage) {
+                const nWidth = Math.min(noteImage.width * 0.6, width * 0.3);
+                const nHeight = (noteImage.height / noteImage.width) * nWidth;
+                page.drawImage(noteImage, {
+                  x: safeX + (stampWidth / 2) - (nWidth / 2),
+                  y: safeY - nHeight - 5,
+                  width: nWidth,
+                  height: nHeight
+                });
+              }
             });
             const pdfBytes = await pdfDoc.save();
             const newFileName = `approved_${uuidv4()}.pdf`;
@@ -209,6 +242,16 @@ export default function ManagerApprovalWorkspace() {
 
               const y = bgImg.height - sHeight - paddingY;
               ctx.drawImage(stampImg, x, y, sWidth, sHeight);
+
+              // Onay Notunu Ekle
+              if (approveNote) {
+                ctx.font = `bold ${Math.max(14, bgImg.width * 0.015)}px Arial`;
+                ctx.fillStyle = '#b91c1c';
+                ctx.textAlign = 'center';
+                const noteX = x + (sWidth / 2);
+                const noteY = y + sHeight + (bgImg.height * 0.02);
+                ctx.fillText(approveNote, noteX, noteY);
+              }
               const blob: Blob = await new Promise((resolve) => canvas.toBlob((b) => resolve(b!), 'image/jpeg', 0.9));
               const newFileName = `approved_${uuidv4()}.jpg`;
               const { error: uploadError } = await supabase.storage

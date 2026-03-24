@@ -16,6 +16,7 @@ interface Invoice {
     created_at?: string;
     approved_at?: string;
     seq_no?: number;
+    approval_note?: string;
 }
 
 export default function InvoiceArchiveScreen() {
@@ -269,9 +270,16 @@ export default function InvoiceArchiveScreen() {
                                             {invoice.approved_at ? new Date(invoice.approved_at).toLocaleDateString('tr-TR') : '-'}
                                         </td>
                                         <td className="px-6 py-4 text-center">
-                                            <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">
-                                                Arşivlendi
-                                            </span>
+                                            <div className="flex flex-col items-center gap-1">
+                                                <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">
+                                                    Arşivlendi
+                                                </span>
+                                                {invoice.approval_note && (
+                                                    <span className="text-[10px] text-slate-500 font-medium italic">
+                                                        ({invoice.approval_note})
+                                                    </span>
+                                                )}
+                                            </div>
                                         </td>
                                         <td className="px-6 py-4 text-center">
                                             {invoice.file_url ? (

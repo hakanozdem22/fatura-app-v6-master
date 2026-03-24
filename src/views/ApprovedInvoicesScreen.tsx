@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
-import { Loader2, CheckCircle2, Search, Trash2, AlertTriangle, X, FileText } from 'lucide-react';
+import { Loader2, CheckCircle2, Search, Trash2, AlertTriangle, X, FileText, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { logAction } from '../lib/logger';
 import { sendNotification } from '../lib/notificationService';
@@ -35,6 +35,22 @@ export default function ApprovedInvoicesScreen() {
     const [searchQuery, setSearchQuery] = useState('');
     const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean, id: string, invoiceNo: string }>({ isOpen: false, id: '', invoiceNo: '' });
     const [isDeleting, setIsDeleting] = useState(false);
+    const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({
+        key: 'approved_at',
+        direction: 'desc'
+    });
+
+    const handleSort = (key: string) => {
+        setSortConfig(prev => ({
+            key,
+            direction: prev.key === key && prev.direction === 'desc' ? 'asc' : 'desc'
+        }));
+    };
+
+    const SortIcon = ({ columnKey }: { columnKey: string }) => {
+        if (sortConfig.key !== columnKey) return <ChevronsUpDown size={16} className="ml-1 opacity-20 group-hover:opacity-50 transition-opacity" />;
+        return sortConfig.direction === 'asc' ? <ChevronUp size={16} className="ml-1 text-primary stroke-[2.5]" /> : <ChevronDown size={16} className="ml-1 text-primary stroke-[2.5]" />;
+    };
 
     // Muhasebe Workspace States
     const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
@@ -517,11 +533,33 @@ export default function ApprovedInvoicesScreen() {
             setDeleteModal({ isOpen: false, id: '', invoiceNo: '' });
         }
     };
-
     const filteredInvoices = invoices.filter(invoice =>
         invoice.company_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         invoice.invoice_no?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    ).sort((a, b) => {
+        const { key, direction } = sortConfig;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let aValue: any = a[key as keyof Invoice];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let bValue: any = b[key as keyof Invoice];
+
+        if (aValue === bValue) return 0;
+        if (aValue == null) return 1;
+        if (bValue == null) return -1;
+
+        if (typeof aValue === 'string' && typeof bValue === 'string') {
+            if (key.includes('date') || key.includes('_at')) {
+                aValue = new Date(aValue).getTime();
+                bValue = new Date(bValue).getTime();
+            } else {
+                return direction === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+            }
+        }
+
+        if (aValue < bValue) return direction === 'asc' ? -1 : 1;
+        if (aValue > bValue) return direction === 'asc' ? 1 : -1;
+        return 0;
+    });
 
     return (
         <div className="mx-auto flex w-full max-w-[1450px] flex-col gap-8 px-8 pb-8 pt-2">
@@ -564,16 +602,30 @@ export default function ApprovedInvoicesScreen() {
                     <table className="w-full text-left text-sm">
                         <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
                             <tr>
-                                <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center">Şirket/Firma</th>
-                                <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center">
-                                    {isMuhasebe || docType === 'Fatura' ? 'Fatura No' : (isSatinalma || docType === 'İrsaliye' ? 'İrsaliye No' : 'Belge No')}
+                                <th onClick={() => handleSort('company_name')} className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group">
+                                    <div className="flex items-center justify-center">Şirket/Firma <SortIcon columnKey="company_name" /></div>
                                 </th>
-                                <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center">
-                                    {isMuhasebe || docType === 'Fatura' ? 'Fatura Tarihi' : (isSatinalma || docType === 'İrsaliye' ? 'İrsaliye Tarihi' : 'Belge Tarihi')}
+                                <th onClick={() => handleSort('invoice_no')} className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group">
+                                    <div className="flex items-center justify-center">
+                                        {isMuhasebe || docType === 'Fatura' ? 'Fatura No' : (isSatinalma || docType === 'İrsaliye' ? 'İrsaliye No' : 'Belge No')}
+                                        <SortIcon columnKey="invoice_no" />
+                                    </div>
                                 </th>
-                                <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center">Yükleme Tarihi</th>
-                                <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center">Onay Tarihi</th>
-                                <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center">Durum</th>
+                                <th onClick={() => handleSort('submission_date')} className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group">
+                                    <div className="flex items-center justify-center">
+                                        {isMuhasebe || docType === 'Fatura' ? 'Fatura Tarihi' : (isSatinalma || docType === 'İrsaliye' ? 'İrsaliye Tarihi' : 'Belge Tarihi')}
+                                        <SortIcon columnKey="submission_date" />
+                                    </div>
+                                </th>
+                                <th onClick={() => handleSort('created_at')} className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group">
+                                    <div className="flex items-center justify-center">Yükleme Tarihi <SortIcon columnKey="created_at" /></div>
+                                </th>
+                                <th onClick={() => handleSort('approved_at')} className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group">
+                                    <div className="flex items-center justify-center">Onay Tarihi <SortIcon columnKey="approved_at" /></div>
+                                </th>
+                                <th onClick={() => handleSort('status')} className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group">
+                                    <div className="flex items-center justify-center">Durum <SortIcon columnKey="status" /></div>
+                                </th>
                                 <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white text-center">İşlemler</th>
                             </tr>
                         </thead>
@@ -612,15 +664,22 @@ export default function ApprovedInvoicesScreen() {
                                             {invoice.approved_at ? new Date(invoice.approved_at).toLocaleDateString('tr-TR') : <span className="text-slate-400 font-normal">-</span>}
                                         </td>
                                         <td className="px-6 py-4 text-center">
-                                            {invoice.status === 'Müdür Onaylı' ? (
-                                                <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
-                                                    {invoice.document_type === 'İrsaliye' ? 'Satın Alma Onayında' : 'Muhasebe Onayında'}
-                                                </span>
-                                            ) : (
-                                                <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">
-                                                    Onaylandı
-                                                </span>
-                                            )}
+                                            <div className="flex flex-col items-center gap-1">
+                                                {invoice.status === 'Müdür Onaylı' ? (
+                                                    <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+                                                        {invoice.document_type === 'İrsaliye' ? 'Satın Alma Onayında' : 'Muhasebe Onayında'}
+                                                    </span>
+                                                ) : (
+                                                    <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">
+                                                        Onaylandı
+                                                    </span>
+                                                )}
+                                                {invoice.approval_note && (
+                                                    <span className="text-[10px] text-slate-500 font-medium italic">
+                                                        ({invoice.approval_note})
+                                                    </span>
+                                                )}
+                                            </div>
                                         </td>
                                         <td className="px-6 py-4 text-center">
                                             <div className="flex items-center justify-center gap-2">
